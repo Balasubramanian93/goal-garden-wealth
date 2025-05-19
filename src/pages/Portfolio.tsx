@@ -1,15 +1,19 @@
 
+import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { 
   ChartPie, 
   Briefcase, 
   TrendingUp, 
   TrendingDown,
   BarChart2,
-  PieChart
+  PieChart,
+  Target,
+  ArrowRight
 } from "lucide-react";
 import { 
   ChartContainer, 
@@ -17,8 +21,12 @@ import {
   ChartTooltipContent 
 } from "@/components/ui/chart";
 import { PieChart as RechartPieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { useGoalsStore } from "@/store/goalsStore";
+import { Link } from "react-router-dom";
 
 const Portfolio = () => {
+  const { goals } = useGoalsStore();
+  
   // Sample portfolio data
   const portfolioValue = 1250000;
   const portfolioGain = 125000;
@@ -66,6 +74,12 @@ const Portfolio = () => {
       gain: 7.1,
     },
   ];
+
+  // Calculate totals from goals data
+  const totalGoalValue = goals.reduce((acc, goal) => acc + goal.targetAmount, 0);
+  const totalCurrentValue = goals.reduce((acc, goal) => acc + goal.currentAmount, 0);
+  const totalProgress = Math.round((totalCurrentValue / totalGoalValue) * 100);
+  const totalMonthlyContribution = goals.reduce((acc, goal) => acc + goal.monthlyContribution, 0);
 
   return (
     <MainLayout>
@@ -123,6 +137,56 @@ const Portfolio = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Goals Summary */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Financial Goals Progress</CardTitle>
+                <CardDescription>Overview of your financial goals</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/goals">
+                  View All Goals <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between text-sm mb-1">
+                <span>Overall Progress: {totalProgress}%</span>
+                <span>₹{(totalCurrentValue / 100000).toFixed(1)}L of ₹{(totalGoalValue / 100000).toFixed(1)}L</span>
+              </div>
+              <Progress value={totalProgress} className="h-2 mb-4" />
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium">Total Goals</h3>
+                    <Target className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <p className="text-2xl font-bold mt-2">{goals.length}</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium">Monthly Contributions</h3>
+                    <TrendingUp className="h-5 w-5 text-green-500" />
+                  </div>
+                  <p className="text-2xl font-bold mt-2">₹{totalMonthlyContribution.toLocaleString()}</p>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium">Target Amount</h3>
+                    <BarChart2 className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <p className="text-2xl font-bold mt-2">₹{(totalGoalValue / 10000000).toFixed(2)} Cr</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Asset Allocation Chart */}
