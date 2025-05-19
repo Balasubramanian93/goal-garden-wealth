@@ -6,7 +6,9 @@ import {
   Calendar,
   ArrowRight,
   User,
-  LogIn
+  LogIn,
+  Target,
+  BarChart2
 } from "lucide-react";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
@@ -29,6 +31,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             </Link>
             <Link to="/analytics" className="text-sm font-medium hover:text-primary transition-colors">
               Analytics
+            </Link>
+            <Link to="/demo" className="text-sm font-medium hover:text-primary transition-colors">
+              Demo
             </Link>
           </nav>
 
