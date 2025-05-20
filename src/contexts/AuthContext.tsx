@@ -24,18 +24,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Get initial session
-        const { data: sessionData } = await supabase.auth.getSession();
-        setSession(sessionData.session);
-        setUser(sessionData.session?.user ?? null);
-        
-        // Listen for auth changes
+        // Set up auth state listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
           }
         );
+        
+        // THEN check for existing session
+        const { data: sessionData } = await supabase.auth.getSession();
+        setSession(sessionData.session);
+        setUser(sessionData.session?.user ?? null);
         
         return () => {
           subscription.unsubscribe();
@@ -59,9 +59,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "Please check your email to verify your account.",
       });
     } catch (error: any) {
+      console.error("Registration error:", error);
       toast({
         title: "Registration failed",
-        description: error.message,
+        description: error.message || "Failed to register. Please try again.",
         variant: "destructive",
       });
       throw error;
@@ -77,9 +78,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "You've successfully logged in.",
       });
     } catch (error: any) {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
-        description: error.message,
+        description: error.message || "Failed to login. Please check your credentials.",
         variant: "destructive",
       });
       throw error;
@@ -96,7 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       toast({
         title: "Error signing out",
-        description: error.message,
+        description: error.message || "An error occurred while signing out.",
         variant: "destructive",
       });
     }
