@@ -8,10 +8,15 @@ import {
   User,
   LogIn,
   Target,
-  BarChart2
+  BarChart2,
+  LogOut
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
+  const { user, signOut } = useAuth();
+  const isAuthenticated = !!user;
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -23,33 +28,52 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/portfolio" className="text-sm font-medium hover:text-primary transition-colors">
-              Portfolio
-            </Link>
-            <Link to="/goals" className="text-sm font-medium hover:text-primary transition-colors">
-              Goals
-            </Link>
-            <Link to="/analytics" className="text-sm font-medium hover:text-primary transition-colors">
-              Analytics
-            </Link>
-            <Link to="/demo" className="text-sm font-medium hover:text-primary transition-colors">
-              Demo
-            </Link>
+            {isAuthenticated && (
+              <>
+                <Link to="/portfolio" className="text-sm font-medium hover:text-primary transition-colors">
+                  Portfolio
+                </Link>
+                <Link to="/goals" className="text-sm font-medium hover:text-primary transition-colors">
+                  Goals
+                </Link>
+                <Link to="/analytics" className="text-sm font-medium hover:text-primary transition-colors">
+                  Analytics
+                </Link>
+                <Link to="/demo" className="text-sm font-medium hover:text-primary transition-colors">
+                  Demo
+                </Link>
+              </>
+            )}
           </nav>
 
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/login">
-                <LogIn className="mr-2 h-4 w-4" />
-                Login
-              </Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link to="/register">
-                <User className="mr-2 h-4 w-4" />
-                Register
-              </Link>
-            </Button>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-4">
+                <div className="text-sm">
+                  <span className="text-muted-foreground mr-2">Hello,</span>
+                  <span className="font-medium">{user.email?.split('@')[0]}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/login">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Login
+                  </Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link to="/register">
+                    <User className="mr-2 h-4 w-4" />
+                    Register
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
