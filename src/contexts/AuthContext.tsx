@@ -22,25 +22,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: sessionData } = await supabase.auth.getSession();
+        setSession(sessionData.session);
+        setUser(sessionData.session?.user ?? null);
+        
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (_event, session) => {
+            setSession(session);
+            setUser(session?.user ?? null);
+          }
+        );
+        
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+      } finally {
         setIsLoading(false);
       }
-    );
-
-    return () => {
-      subscription.unsubscribe();
     };
+    
+    initializeAuth();
   }, []);
 
   const signUp = async (email: string, password: string) => {

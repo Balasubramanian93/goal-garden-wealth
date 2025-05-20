@@ -10,7 +10,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Supabase environment variables are missing. Make sure you have connected your project to Supabase properly.');
 }
 
+// Create the Supabase client with fallback for development
 export const supabase = createClient(
-  supabaseUrl || '', 
-  supabaseAnonKey || ''
+  supabaseUrl || 'https://your-project.supabase.co', 
+  supabaseAnonKey || 'your-anon-key'
 );
