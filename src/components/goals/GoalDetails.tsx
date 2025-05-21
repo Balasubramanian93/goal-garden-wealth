@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Dialog,
@@ -167,7 +168,7 @@ export function GoalDetails({ goalId, open, onOpenChange }: GoalDetailsProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[700px] mx-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Goal Details</DialogTitle>
           </DialogHeader>
