@@ -1,13 +1,15 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { useGoalsStore } from "@/store/goalsStore";
-import { Loader2, Calendar, Flag, Target, Home, Briefcase, ArrowLeft, Plus } from "lucide-react";
+import { Loader2, Calendar, Flag, Target, Home, Briefcase, ArrowLeft, Plus, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Toggle } from "@/components/ui/toggle";
 import {
   LineChart,
   Line,
@@ -24,6 +26,7 @@ import { GoalDetailsHeader } from "@/components/goals/GoalDetailsHeader";
 import { GoalProgressSection } from "@/components/goals/GoalProgressSection";
 import { GoalMetricsGrid } from "@/components/goals/GoalMetricsGrid";
 import { GoalRecommendations } from "@/components/goals/GoalRecommendations";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const GoalDetailsPage = () => {
   const { goalId } = useParams();
@@ -34,6 +37,7 @@ const GoalDetailsPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [goal, setGoal] = useState<any>(null);
   const [showAddInvestmentDialog, setShowAddInvestmentDialog] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   
   useEffect(() => {
     // Check if user is authenticated
@@ -207,13 +211,27 @@ const GoalDetailsPage = () => {
   return (
     <MainLayout>
       <div className="container max-w-5xl py-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/goals')} 
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Goals
-        </Button>
+        {/* Back button and theme toggle */}
+        <div className="flex justify-between items-center mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/goals')} 
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Goals
+          </Button>
+          <Toggle 
+            pressed={theme === 'dark'}
+            onPressedChange={toggleTheme}
+            aria-label="Toggle theme"
+            className="ml-auto"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </Toggle>
+        </div>
         
         <div className="space-y-8">
           {/* Goal Header with Add Investment button */}
@@ -247,100 +265,97 @@ const GoalDetailsPage = () => {
             formatCurrency={formatCurrency}
           />
           
-          {/* Growth Comparison and Investment Tracker side by side with proper spacing */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Comparison Chart - with proper sizing and responsive handling */}
-            <div className="border rounded-lg p-4 bg-card shadow-sm h-full flex flex-col">
-              <h3 className="font-medium text-lg mb-2">Growth Comparison</h3>
-              <div className="flex-grow" style={{ minHeight: "300px", height: "100%" }}>
-                <ChartContainer
-                  className="h-full"
-                  config={{
-                    expected: {
-                      label: "Expected Growth",
-                      theme: {
-                        light: "hsl(var(--primary))",
-                        dark: "hsl(var(--primary))",
-                      },
+          {/* Growth Comparison Chart - Full width */}
+          <div className="border rounded-lg p-4 bg-card shadow-sm">
+            <h3 className="font-medium text-lg mb-2">Growth Comparison</h3>
+            <div style={{ height: "300px" }}>
+              <ChartContainer
+                className="h-full"
+                config={{
+                  expected: {
+                    label: "Expected Growth",
+                    theme: {
+                      light: "hsl(var(--primary))",
+                      dark: "hsl(var(--primary))",
                     },
-                    actual: {
-                      label: "Actual Progress",
-                      theme: {
-                        light: "#10b981",
-                        dark: "#10b981",
-                      },
+                  },
+                  actual: {
+                    label: "Actual Progress",
+                    theme: {
+                      light: "#10b981",
+                      dark: "#10b981",
                     },
-                  }}
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart 
-                      data={comparisonData} 
-                      margin={{ top: 5, right: 10, bottom: 5, left: 20 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="year" />
-                      <YAxis tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`} />
-                      <ChartTooltip
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            return (
-                              <ChartTooltipContent 
-                                active={active} 
-                                payload={payload} 
-                                formatter={(value) => [
-                                  `₹${Number(value).toLocaleString()}`,
-                                  payload[0].dataKey === "expected" ? "Expected" : "Actual"
-                                ]} 
-                              />
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="expected"
-                        name="expected"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="actual"
-                        name="actual"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  Compare your actual progress with the expected growth trajectory
-                </p>
-              </div>
+                  },
+                }}
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart 
+                    data={comparisonData} 
+                    margin={{ top: 5, right: 10, bottom: 5, left: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="year" />
+                    <YAxis tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`} />
+                    <ChartTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <ChartTooltipContent 
+                              active={active} 
+                              payload={payload} 
+                              formatter={(value) => [
+                                `₹${Number(value).toLocaleString()}`,
+                                payload[0].dataKey === "expected" ? "Expected" : "Actual"
+                              ]} 
+                            />
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="expected"
+                      name="expected"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="actual"
+                      name="actual"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Compare your actual progress with the expected growth trajectory
+              </p>
             </div>
-            
-            {/* Investment Tracker - with explicit height control */}
-            <GoalInvestmentsTracker 
-              goalId={goal.id} 
-              showAddDialog={showAddInvestmentDialog}
-              setShowAddDialog={setShowAddInvestmentDialog}
-              onInvestmentAdded={(amount) => {
-                // Update goal current amount in local state to avoid full page refresh
-                const newAmount = goal.currentAmount + amount;
-                const newProgress = Math.min(100, Math.round((newAmount / goal.targetAmount) * 100));
-                
-                setGoal({
-                  ...goal,
-                  currentAmount: newAmount,
-                  progress: newProgress
-                });
-              }} 
-            />
           </div>
+          
+          {/* Investment Tracker - Full width */}
+          <GoalInvestmentsTracker 
+            goalId={goal.id} 
+            showAddDialog={showAddInvestmentDialog}
+            setShowAddDialog={setShowAddInvestmentDialog}
+            onInvestmentAdded={(amount) => {
+              // Update goal current amount in local state to avoid full page refresh
+              const newAmount = goal.currentAmount + amount;
+              const newProgress = Math.min(100, Math.round((newAmount / goal.targetAmount) * 100));
+              
+              setGoal({
+                ...goal,
+                currentAmount: newAmount,
+                progress: newProgress
+              });
+            }} 
+          />
           
           {/* Recommendations */}
           {shortfall > 0 && (

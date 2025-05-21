@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -35,81 +36,83 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/tools" element={<Tools />} />
-            
-            {/* Calculator Routes - All accessible without login */}
-            <Route path="/calculators/fd" element={<FDCalculatorPage />} />
-            <Route path="/calculators/cagr" element={<CAGRCalculatorPage />} />
-            <Route path="/calculators/rd" element={<RDCalculatorPage />} />
-            <Route path="/calculators/sip" element={<SIPCalculatorPage />} />
-            <Route path="/calculators/goal-sip" element={<GoalSIPCalculatorPage />} />
-            <Route path="/calculators/fire" element={<FIRECalculatorPage />} />
-            <Route path="/calculators/nsc" element={<NSCCalculatorPage />} />
-            <Route path="/calculators/hra" element={<HRACalculatorPage />} />
-            <Route path="/calculators/ssy" element={<SSYCalculatorPage />} />
-            <Route path="/calculators/mf" element={<MFCalculatorPage />} />
-            <Route path="/calculators/irr" element={<IRRCalculatorPage />} />
-            
-            {/* Protected Routes - require authentication */}
-            <Route 
-              path="/portfolio" 
-              element={
-                <ProtectedRoute>
-                  <Portfolio />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/goals" 
-              element={
-                <ProtectedRoute>
-                  <Goals />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/goals/details/:goalId" 
-              element={
-                <ProtectedRoute>
-                  <GoalDetailsPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/goals/edit/:goalId" 
-              element={
-                <ProtectedRoute>
-                  <EditGoalPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/analytics" 
-              element={
-                <ProtectedRoute>
-                  <Analytics />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/demo" 
-              element={
-                <ProtectedRoute>
-                  <Demo />
-                </ProtectedRoute>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/tools" element={<Tools />} />
+              
+              {/* Calculator Routes - All accessible without login */}
+              <Route path="/calculators/fd" element={<FDCalculatorPage />} />
+              <Route path="/calculators/cagr" element={<CAGRCalculatorPage />} />
+              <Route path="/calculators/rd" element={<RDCalculatorPage />} />
+              <Route path="/calculators/sip" element={<SIPCalculatorPage />} />
+              <Route path="/calculators/goal-sip" element={<GoalSIPCalculatorPage />} />
+              <Route path="/calculators/fire" element={<FIRECalculatorPage />} />
+              <Route path="/calculators/nsc" element={<NSCCalculatorPage />} />
+              <Route path="/calculators/hra" element={<HRACalculatorPage />} />
+              <Route path="/calculators/ssy" element={<SSYCalculatorPage />} />
+              <Route path="/calculators/mf" element={<MFCalculatorPage />} />
+              <Route path="/calculators/irr" element={<IRRCalculatorPage />} />
+              
+              {/* Protected Routes - require authentication */}
+              <Route 
+                path="/portfolio" 
+                element={
+                  <ProtectedRoute>
+                    <Portfolio />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/goals" 
+                element={
+                  <ProtectedRoute>
+                    <Goals />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/goals/details/:goalId" 
+                element={
+                  <ProtectedRoute>
+                    <GoalDetailsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/goals/edit/:goalId" 
+                element={
+                  <ProtectedRoute>
+                    <EditGoalPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/analytics" 
+                element={
+                  <ProtectedRoute>
+                    <Analytics />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/demo" 
+                element={
+                  <ProtectedRoute>
+                    <Demo />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>

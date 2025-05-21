@@ -15,9 +15,12 @@ import {
   Phone,
   Newspaper,
   Briefcase,
-  Mail
+  Mail,
+  Moon,
+  Sun
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -27,9 +30,11 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { Toggle } from "@/components/ui/toggle";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const isAuthenticated = !!user;
   
   // Get display name from user metadata if available
@@ -70,6 +75,21 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           </nav>
 
           <div className="flex items-center gap-4">
+            {/* Theme Toggle */}
+            <Toggle 
+              pressed={theme === 'dark'}
+              onPressedChange={toggleTheme}
+              aria-label="Toggle theme"
+              size="sm"
+              className="mr-2"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Toggle>
+
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
                 <div className="text-sm">
