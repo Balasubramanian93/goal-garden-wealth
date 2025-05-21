@@ -14,6 +14,7 @@ import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Demo from "./pages/Demo";
+import Tools from "./pages/Tools";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Analytics />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tools" 
+              element={
+                <ProtectedRoute>
+                  <Tools />
                 </ProtectedRoute>
               } 
             />

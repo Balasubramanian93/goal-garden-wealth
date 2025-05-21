@@ -9,13 +9,20 @@ import {
   LogIn,
   Target,
   BarChart2,
-  LogOut
+  LogOut,
+  Calculator,
+  Settings
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut } = useAuth();
   const isAuthenticated = !!user;
+  
+  // Get display name from user metadata if available
+  const displayName = user?.user_metadata?.first_name 
+    ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`
+    : user?.email?.split('@')[0];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -39,8 +46,11 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 <Link to="/analytics" className="text-sm font-medium hover:text-primary transition-colors">
                   Analytics
                 </Link>
-                <Link to="/demo" className="text-sm font-medium hover:text-primary transition-colors">
-                  Demo
+                <Link to="/tools" className="text-sm font-medium hover:text-primary transition-colors">
+                  <div className="flex items-center gap-1">
+                    <Calculator className="h-4 w-4" />
+                    Tools
+                  </div>
                 </Link>
               </>
             )}
@@ -51,7 +61,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               <div className="flex items-center gap-4">
                 <div className="text-sm">
                   <span className="text-muted-foreground mr-2">Hello,</span>
-                  <span className="font-medium">{user.email?.split('@')[0]}</span>
+                  <span className="font-medium">{displayName}</span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => signOut()}>
                   <LogOut className="mr-2 h-4 w-4" />
