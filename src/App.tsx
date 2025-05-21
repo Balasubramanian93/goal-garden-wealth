@@ -42,7 +42,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/tools" element={<Tools />} />
             
-            {/* Calculator Routes */}
+            {/* Calculator Routes - All accessible without login */}
             <Route path="/calculators/fd" element={<FDCalculatorPage />} />
             <Route path="/calculators/cagr" element={<CAGRCalculatorPage />} />
             <Route path="/calculators/rd" element={<RDCalculatorPage />} />
@@ -55,6 +55,7 @@ const App = () => (
             <Route path="/calculators/mf" element={<MFCalculatorPage />} />
             <Route path="/calculators/irr" element={<IRRCalculatorPage />} />
             
+            {/* Protected Routes - require authentication */}
             <Route 
               path="/portfolio" 
               element={

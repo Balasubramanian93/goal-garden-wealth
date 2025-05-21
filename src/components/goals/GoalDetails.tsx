@@ -168,7 +168,7 @@ export function GoalDetails({ goalId, open, onOpenChange }: GoalDetailsProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[70vw] h-[70vh] max-w-5xl mx-auto overflow-hidden flex flex-col">
+        <DialogContent className="w-[70vw] h-[70vh] max-w-5xl mx-auto fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Goal Details</DialogTitle>
           </DialogHeader>
