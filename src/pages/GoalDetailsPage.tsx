@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -34,6 +33,7 @@ const GoalDetailsPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [goal, setGoal] = useState<any>(null);
+  const [showAddInvestmentDialog, setShowAddInvestmentDialog] = useState(false);
   
   useEffect(() => {
     // Check if user is authenticated
@@ -216,8 +216,17 @@ const GoalDetailsPage = () => {
         </Button>
         
         <div className="space-y-8">
-          {/* Goal Header */}
-          <GoalDetailsHeader goal={goal} />
+          {/* Goal Header with Add Investment button */}
+          <div className="flex justify-between items-start">
+            <GoalDetailsHeader goal={goal} />
+            <Button 
+              onClick={() => setShowAddInvestmentDialog(true)} 
+              className="ml-4"
+              size="sm"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Investment
+            </Button>
+          </div>
           
           {/* Goal Progress */}
           <GoalProgressSection 
@@ -238,12 +247,12 @@ const GoalDetailsPage = () => {
             formatCurrency={formatCurrency}
           />
           
-          {/* Rearranged section: Growth Comparison and Investment Tracker side by side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Comparison Chart */}
-            <div className="border rounded-lg p-6 bg-card shadow-sm">
-              <h3 className="font-medium text-lg mb-4">Growth Comparison</h3>
-              <div className="h-[350px] w-full">
+          {/* Growth Comparison and Investment Tracker side by side with proper spacing */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Comparison Chart - with proper sizing and responsive handling */}
+            <div className="border rounded-lg p-4 bg-card shadow-sm h-full flex flex-col">
+              <h3 className="font-medium text-lg mb-2">Growth Comparison</h3>
+              <div className="flex-grow" style={{ minHeight: "300px", height: "100%" }}>
                 <ChartContainer
                   className="h-full"
                   config={{
@@ -263,48 +272,50 @@ const GoalDetailsPage = () => {
                     },
                   }}
                 >
-                  <LineChart 
-                    data={comparisonData} 
-                    margin={{ top: 5, right: 30, bottom: 5, left: 30 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="year" />
-                    <YAxis tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`} />
-                    <ChartTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <ChartTooltipContent 
-                              active={active} 
-                              payload={payload} 
-                              formatter={(value) => [
-                                `₹${Number(value).toLocaleString()}`,
-                                payload[0].dataKey === "expected" ? "Expected" : "Actual"
-                              ]} 
-                            />
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="expected"
-                      name="expected"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="actual"
-                      name="actual"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                    />
-                  </LineChart>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart 
+                      data={comparisonData} 
+                      margin={{ top: 5, right: 10, bottom: 5, left: 20 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="year" />
+                      <YAxis tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`} />
+                      <ChartTooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <ChartTooltipContent 
+                                active={active} 
+                                payload={payload} 
+                                formatter={(value) => [
+                                  `₹${Number(value).toLocaleString()}`,
+                                  payload[0].dataKey === "expected" ? "Expected" : "Actual"
+                                ]} 
+                              />
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="expected"
+                        name="expected"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="actual"
+                        name="actual"
+                        stroke="#10b981"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </ChartContainer>
                 <p className="text-xs text-muted-foreground text-center mt-2">
                   Compare your actual progress with the expected growth trajectory
@@ -312,9 +323,11 @@ const GoalDetailsPage = () => {
               </div>
             </div>
             
-            {/* Investment Tracker */}
+            {/* Investment Tracker - with explicit height control */}
             <GoalInvestmentsTracker 
               goalId={goal.id} 
+              showAddDialog={showAddInvestmentDialog}
+              setShowAddDialog={setShowAddInvestmentDialog}
               onInvestmentAdded={(amount) => {
                 // Update goal current amount in local state to avoid full page refresh
                 const newAmount = goal.currentAmount + amount;

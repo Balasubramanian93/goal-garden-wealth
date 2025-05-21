@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Calendar, Loader2, Trash2 } from "lucide-react";
+import { Calendar, Loader2, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -39,14 +39,20 @@ interface Investment {
 interface GoalInvestmentsTrackerProps {
   goalId: number;
   onInvestmentAdded: (amount: number) => void;
+  showAddDialog: boolean;
+  setShowAddDialog: (show: boolean) => void;
 }
 
-export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvestmentsTrackerProps) {
+export function GoalInvestmentsTracker({ 
+  goalId, 
+  onInvestmentAdded, 
+  showAddDialog, 
+  setShowAddDialog 
+}: GoalInvestmentsTrackerProps) {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingInvestment, setIsAddingInvestment] = useState(false);
   const [isDeletingInvestment, setIsDeletingInvestment] = useState(false);
-  const [showAddDialog, setShowAddDialog] = useState(false);
   const [investmentToDelete, setInvestmentToDelete] = useState<Investment | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -251,15 +257,8 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
   return (
     <Card className="border shadow-sm h-full flex flex-col">
       <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-lg">Investment History</CardTitle>
-            <CardDescription>Track your contributions towards this goal</CardDescription>
-          </div>
-          <Button onClick={() => setShowAddDialog(true)} size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Add Investment
-          </Button>
-        </div>
+        <CardTitle className="text-lg">Investment History</CardTitle>
+        <CardDescription>Track your contributions towards this goal</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow overflow-auto">
         {isLoading ? (
