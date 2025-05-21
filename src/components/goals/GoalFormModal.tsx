@@ -15,15 +15,8 @@ import { useForm } from "react-hook-form";
 import { Goal, useGoalsStore } from "@/store/goalsStore";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage 
-} from "@/components/ui/form";
 import { Slider } from "@/components/ui/slider";
+import { supabase } from "@/integrations/supabase/client";
 
 type IconOption = {
   type: Goal['iconType'];
@@ -52,6 +45,7 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
   const [inputMode, setInputMode] = useState<'target' | 'contribution'>('target');
   const [calculatedTarget, setCalculatedTarget] = useState<number | null>(null);
   const [timePeriod, setTimePeriod] = useState<number>(5); // Default to 5 years
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const isEditing = goalId !== undefined;
   const existingGoal = isEditing ? getGoalById(goalId) : undefined;
@@ -67,6 +61,21 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
       iconType: 'Target'
     }
   });
+
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        toast.error("You must be logged in to create or edit goals");
+        onOpenChange(false);
+      }
+    };
+    
+    if (open) {
+      checkAuth();
+    }
+  }, [open, onOpenChange]);
 
   // Watch for changes in form values that would affect the target calculation
   const monthlyContribution = watch('monthlyContribution');
@@ -85,7 +94,7 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
         const currentAmountValue = Number(currentAmount) || 0;
         const currentAmountFuture = currentAmountValue * Math.pow(1 + monthlyRate, months);
         
-        // SIP Future Value formula: P * ((1+r)^n - 1) * (1+r)/r
+        // SIP Future Value formula: P * ((1+r)^n - 1) / r
         const monthlyContributionFuture = monthlyContribution * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
         
         const futureValue = currentAmountFuture + monthlyContributionFuture;
@@ -136,18 +145,30 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
     setInputMode(newMode);
   };
 
-  const onSubmit = (data: GoalFormValues) => {
+  const onSubmit = async (data: GoalFormValues) => {
     try {
+      setIsSubmitting(true);
+      
+      // Check authentication
+      const { data: authData } = await supabase.auth.getSession();
+      if (!authData.session) {
+        toast.error("You must be logged in to save goals");
+        return;
+      }
+      
       if (isEditing && existingGoal) {
-        updateGoal(existingGoal.id, data);
+        await updateGoal(existingGoal.id, data);
         toast.success("Goal updated successfully!");
       } else {
-        addGoal(data);
+        await addGoal(data);
         toast.success("New goal added successfully!");
       }
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error saving goal:", error);
       toast.error("There was a problem saving your goal");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -337,8 +358,20 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
           )}
 
           <DialogFooter>
-            <Button type="submit">
-              {isEditing ? "Save Changes" : "Add Goal"}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <span className="mr-2">
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </span>
+                  Processing...
+                </>
+              ) : (
+                isEditing ? "Save Changes" : "Add Goal"
+              )}
             </Button>
           </DialogFooter>
         </form>

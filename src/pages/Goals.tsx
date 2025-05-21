@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,16 +14,52 @@ import {
   TrendingUp,
   BarChart2,
   Home,
-  Briefcase
+  Briefcase,
+  Loader2
 } from "lucide-react";
 import { GoalFormModal } from "@/components/goals/GoalFormModal";
 import { GoalDetails } from "@/components/goals/GoalDetails";
 import { useGoalsStore } from "@/store/goalsStore";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const Goals = () => {
   const [showAddGoalModal, setShowAddGoalModal] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
-  const { goals } = useGoalsStore();
+  const { goals, loading, fetchGoals } = useGoalsStore();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const navigate = useNavigate();
+
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      
+      if (!session) {
+        toast.error("You must be logged in to view your goals");
+        navigate("/login");
+      } else {
+        fetchGoals();
+      }
+    };
+    
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsAuthenticated(!!session);
+        if (!session) {
+          navigate("/login");
+        }
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, fetchGoals]);
 
   const renderGoalIcon = (iconType: string) => {
     switch (iconType) {
@@ -46,6 +82,17 @@ const Goals = () => {
     e.stopPropagation();
     setSelectedGoalId(goalId);
   };
+
+  // If still checking authentication, show a loading state
+  if (isAuthenticated === null) {
+    return (
+      <MainLayout>
+        <div className="container py-8 flex items-center justify-center h-[70vh]">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -111,63 +158,80 @@ const Goals = () => {
         
         {/* Individual Goals */}
         <div className="space-y-6">
-          {goals.map((goal) => (
-            <Card key={goal.id}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between">
-                  <div className="flex gap-4">
-                    {renderGoalIcon(goal.iconType)}
-                    <div>
-                      <CardTitle>{goal.name}</CardTitle>
-                      <CardDescription>Target: ₹{(goal.targetAmount / 100000).toFixed(1)}L by {goal.targetDate}</CardDescription>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={(e) => handleEditClick(e, goal.id)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex flex-col space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>Progress: {goal.progress}%</span>
-                      <span>₹{(goal.currentAmount / 100000).toFixed(1)}L of ₹{(goal.targetAmount / 100000).toFixed(1)}L</span>
-                    </div>
-                    <Progress value={goal.progress} className="h-2" />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Monthly Contribution</p>
-                      <p className="font-medium">₹{goal.monthlyContribution.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Expected Return</p>
-                      <p className="font-medium">{goal.expectedReturn}% p.a.</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Time Remaining</p>
-                      <p className="font-medium">{parseInt(goal.targetDate) - new Date().getFullYear()} years</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setSelectedGoalId(goal.id)}
-                >
-                  View Details
+          {loading ? (
+            <div className="h-40 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : goals.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-10">
+                <Target className="h-16 w-16 text-muted-foreground mb-4" />
+                <h3 className="text-xl font-medium mb-2">No goals found</h3>
+                <p className="text-muted-foreground mb-6">Create your first financial goal to start tracking your progress</p>
+                <Button onClick={() => setShowAddGoalModal(true)}>
+                  <Plus className="mr-2 h-4 w-4" /> Create First Goal
                 </Button>
-              </CardFooter>
+              </CardContent>
             </Card>
-          ))}
+          ) : (
+            goals.map((goal) => (
+              <Card key={goal.id}>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between">
+                    <div className="flex gap-4">
+                      {renderGoalIcon(goal.iconType)}
+                      <div>
+                        <CardTitle>{goal.name}</CardTitle>
+                        <CardDescription>Target: ₹{(goal.targetAmount / 100000).toFixed(1)}L by {goal.targetDate}</CardDescription>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={(e) => handleEditClick(e, goal.id)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>Progress: {goal.progress}%</span>
+                        <span>₹{(goal.currentAmount / 100000).toFixed(1)}L of ₹{(goal.targetAmount / 100000).toFixed(1)}L</span>
+                      </div>
+                      <Progress value={goal.progress} className="h-2" />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Monthly Contribution</p>
+                        <p className="font-medium">₹{goal.monthlyContribution.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Expected Return</p>
+                        <p className="font-medium">{goal.expectedReturn}% p.a.</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Time Remaining</p>
+                        <p className="font-medium">{parseInt(goal.targetDate) - new Date().getFullYear()} years</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setSelectedGoalId(goal.id)}
+                  >
+                    View Details
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))
+          )}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export interface Goal {
   id: number;
@@ -16,93 +17,182 @@ export interface Goal {
 
 interface GoalsState {
   goals: Goal[];
-  addGoal: (goal: Omit<Goal, 'id' | 'progress'>) => void;
-  updateGoal: (id: number, goal: Partial<Goal>) => void;
-  deleteGoal: (id: number) => void;
+  loading: boolean;
+  fetchGoals: () => Promise<void>;
+  addGoal: (goal: Omit<Goal, 'id' | 'progress'>) => Promise<void>;
+  updateGoal: (id: number, goal: Partial<Goal>) => Promise<void>;
+  deleteGoal: (id: number) => Promise<void>;
   getGoalById: (id: number) => Goal | undefined;
 }
 
-export const useGoalsStore = create<GoalsState>()(
-  persist(
-    (set, get) => ({
-      goals: [
-        {
-          id: 1,
-          name: "Child's Education",
-          targetAmount: 5000000,
-          currentAmount: 2000000,
-          targetDate: "2040",
-          monthlyContribution: 15000,
-          progress: 40,
-          expectedReturn: 12,
-          iconType: 'Calendar'
-        },
-        {
-          id: 2,
-          name: "Retirement (FIRE)",
-          targetAmount: 50000000,
-          currentAmount: 10000000,
-          targetDate: "2035",
-          monthlyContribution: 75000,
-          progress: 20,
-          expectedReturn: 10,
-          iconType: 'Flag'
-        },
-        {
-          id: 3,
-          name: "Dream Home",
-          targetAmount: 8000000,
-          currentAmount: 1200000,
-          targetDate: "2028",
-          monthlyContribution: 50000,
-          progress: 15,
-          expectedReturn: 8,
-          iconType: 'Target'
-        }
-      ],
-      addGoal: (goal) => {
-        set((state) => {
-          const newId = state.goals.length > 0 
-            ? Math.max(...state.goals.map(g => g.id)) + 1 
-            : 1;
-          
-          const progress = Math.round((goal.currentAmount / goal.targetAmount) * 100);
-          
-          return { 
-            goals: [...state.goals, { ...goal, id: newId, progress }] 
-          };
-        });
-      },
-      updateGoal: (id, updatedGoal) => {
-        set((state) => {
-          const goals = state.goals.map(goal => {
-            if (goal.id === id) {
-              const newGoal = { ...goal, ...updatedGoal };
-              // Recalculate progress if amounts changed
-              if (updatedGoal.currentAmount !== undefined || updatedGoal.targetAmount !== undefined) {
-                const currentAmount = updatedGoal.currentAmount ?? goal.currentAmount;
-                const targetAmount = updatedGoal.targetAmount ?? goal.targetAmount;
-                newGoal.progress = Math.round((currentAmount / targetAmount) * 100);
-              }
-              return newGoal;
-            }
-            return goal;
-          });
-          
-          return { goals };
-        });
-      },
-      deleteGoal: (id) => {
-        set((state) => ({
-          goals: state.goals.filter(goal => goal.id !== id)
-        }));
-      },
-      getGoalById: (id) => {
-        return get().goals.find(goal => goal.id === id);
+export const useGoalsStore = create<GoalsState>((set, get) => ({
+  goals: [],
+  loading: false,
+
+  fetchGoals: async () => {
+    try {
+      set({ loading: true });
+      
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        console.error("No authenticated user session found");
+        set({ loading: false });
+        return;
       }
-    }),
-    {
-      name: 'goals-storage',
+
+      const { data, error } = await supabase
+        .from('goals')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (error) throw error;
+
+      // Transform the data to match our Goal interface
+      const transformedGoals: Goal[] = data.map(goal => ({
+        id: goal.id,
+        name: goal.name,
+        targetAmount: Number(goal.target_amount),
+        currentAmount: Number(goal.current_amount),
+        targetDate: goal.target_date,
+        monthlyContribution: Number(goal.monthly_contribution),
+        progress: goal.progress,
+        expectedReturn: Number(goal.expected_return),
+        iconType: goal.icon_type as Goal['iconType'],
+      }));
+
+      set({ goals: transformedGoals, loading: false });
+    } catch (error: any) {
+      console.error("Error fetching goals:", error.message);
+      toast.error("Failed to fetch goals");
+      set({ loading: false });
     }
-  )
-);
+  },
+
+  addGoal: async (goal) => {
+    try {
+      const progress = Math.round((goal.currentAmount / goal.targetAmount) * 100);
+
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        toast.error("You must be logged in to add goals");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('goals')
+        .insert([
+          {
+            user_id: session.session.user.id,
+            name: goal.name,
+            target_amount: goal.targetAmount,
+            current_amount: goal.currentAmount,
+            target_date: goal.targetDate,
+            monthly_contribution: goal.monthlyContribution,
+            progress: progress,
+            expected_return: goal.expectedReturn,
+            icon_type: goal.iconType,
+          }
+        ])
+        .select();
+
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        const newGoal: Goal = {
+          id: data[0].id,
+          name: data[0].name,
+          targetAmount: Number(data[0].target_amount),
+          currentAmount: Number(data[0].current_amount),
+          targetDate: data[0].target_date,
+          monthlyContribution: Number(data[0].monthly_contribution),
+          progress: data[0].progress,
+          expectedReturn: Number(data[0].expected_return),
+          iconType: data[0].icon_type as Goal['iconType'],
+        };
+        
+        set(state => ({ goals: [...state.goals, newGoal] }));
+      }
+    } catch (error: any) {
+      console.error("Error adding goal:", error.message);
+      toast.error("Failed to add goal");
+    }
+  },
+
+  updateGoal: async (id, updatedGoal) => {
+    try {
+      const goals = get().goals;
+      const existingGoal = goals.find(goal => goal.id === id);
+      
+      if (!existingGoal) {
+        throw new Error(`Goal with id ${id} not found`);
+      }
+
+      // Recalculate progress if amounts changed
+      let progress = existingGoal.progress;
+      if (updatedGoal.currentAmount !== undefined || updatedGoal.targetAmount !== undefined) {
+        const currentAmount = updatedGoal.currentAmount ?? existingGoal.currentAmount;
+        const targetAmount = updatedGoal.targetAmount ?? existingGoal.targetAmount;
+        progress = Math.round((currentAmount / targetAmount) * 100);
+      }
+
+      // Prepare update payload
+      const updatePayload: any = {};
+      
+      if (updatedGoal.name !== undefined) updatePayload.name = updatedGoal.name;
+      if (updatedGoal.targetAmount !== undefined) updatePayload.target_amount = updatedGoal.targetAmount;
+      if (updatedGoal.currentAmount !== undefined) updatePayload.current_amount = updatedGoal.currentAmount;
+      if (updatedGoal.targetDate !== undefined) updatePayload.target_date = updatedGoal.targetDate;
+      if (updatedGoal.monthlyContribution !== undefined) updatePayload.monthly_contribution = updatedGoal.monthlyContribution;
+      if (updatedGoal.expectedReturn !== undefined) updatePayload.expected_return = updatedGoal.expectedReturn;
+      if (updatedGoal.iconType !== undefined) updatePayload.icon_type = updatedGoal.iconType;
+      updatePayload.progress = progress;
+      updatePayload.updated_at = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('goals')
+        .update(updatePayload)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Update local state
+      set(state => ({
+        goals: state.goals.map(goal => {
+          if (goal.id === id) {
+            return {
+              ...goal,
+              ...updatedGoal,
+              progress,
+            };
+          }
+          return goal;
+        })
+      }));
+    } catch (error: any) {
+      console.error("Error updating goal:", error.message);
+      toast.error("Failed to update goal");
+    }
+  },
+
+  deleteGoal: async (id) => {
+    try {
+      const { error } = await supabase
+        .from('goals')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      set(state => ({
+        goals: state.goals.filter(goal => goal.id !== id)
+      }));
+    } catch (error: any) {
+      console.error("Error deleting goal:", error.message);
+      toast.error("Failed to delete goal");
+    }
+  },
+
+  getGoalById: (id) => {
+    return get().goals.find(goal => goal.id === id);
+  }
+}));
