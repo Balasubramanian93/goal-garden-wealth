@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const RDCalculator = () => {
+interface RDCalculatorProps {
+  onCalculate?: (monthlyDeposit: number, interestRate: number, months: number) => void;
+}
+
+const RDCalculator = ({ onCalculate }: RDCalculatorProps = {}) => {
   const [monthlyDeposit, setMonthlyDeposit] = useState<number | ''>('');
   const [interestRate, setInterestRate] = useState<number | ''>('');
   const [months, setMonths] = useState<number | ''>('');
@@ -32,6 +36,11 @@ const RDCalculator = () => {
       totalDeposit: parseFloat(totalDeposit.toFixed(2)),
       interest: parseFloat(interest.toFixed(2))
     });
+    
+    // Call the onCalculate callback if provided
+    if (onCalculate) {
+      onCalculate(P, Number(interestRate), t);
+    }
   };
 
   return (

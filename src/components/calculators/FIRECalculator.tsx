@@ -5,7 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const FIRECalculator = () => {
+interface FIRECalculatorProps {
+  onCalculate?: (monthlyExpenses: number, currentSavings: number, monthlySavings: number, 
+    expectedReturn: number, inflationRate: number, withdrawalRate: number, yearsToFIRE: number) => void;
+}
+
+const FIRECalculator = ({ onCalculate }: FIRECalculatorProps = {}) => {
   const [monthlyExpenses, setMonthlyExpenses] = useState<number | ''>('');
   const [currentSavings, setCurrentSavings] = useState<number | ''>('');
   const [monthlySavings, setMonthlySavings] = useState<number | ''>('');
@@ -48,6 +53,19 @@ const FIRECalculator = () => {
       targetCorpus: parseFloat(targetCorpus.toFixed(0)),
       yearsToFIRE: years
     });
+    
+    // Call the onCalculate callback if provided
+    if (onCalculate) {
+      onCalculate(
+        Number(monthlyExpenses), 
+        Number(currentSavings), 
+        Number(monthlySavings), 
+        Number(expectedReturn), 
+        Number(inflationRate), 
+        Number(withdrawalRate),
+        years
+      );
+    }
   };
 
   return (

@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const CAGRCalculator = () => {
+interface CAGRCalculatorProps {
+  onCalculate?: (initialInvestment: number, finalValue: number, years: number, cagr: number) => void;
+}
+
+const CAGRCalculator = ({ onCalculate }: CAGRCalculatorProps = {}) => {
   const [initialInvestment, setInitialInvestment] = useState<number | ''>('');
   const [finalValue, setFinalValue] = useState<number | ''>('');
   const [years, setYears] = useState<number | ''>('');
@@ -20,6 +24,11 @@ const CAGRCalculator = () => {
     // CAGR formula: (Final Value / Initial Investment)^(1/years) - 1
     const cagr = (Math.pow(finalValue / initialInvestment, 1 / years) - 1) * 100;
     setResult(parseFloat(cagr.toFixed(2)));
+    
+    // Call the onCalculate callback if provided
+    if (onCalculate) {
+      onCalculate(Number(initialInvestment), Number(finalValue), Number(years), cagr);
+    }
   };
 
   return (

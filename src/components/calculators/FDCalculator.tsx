@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const FDCalculator = () => {
+interface FDCalculatorProps {
+  onCalculate?: (principal: number, interestRate: number, years: number) => void;
+}
+
+const FDCalculator = ({ onCalculate }: FDCalculatorProps = {}) => {
   const [principal, setPrincipal] = useState<number | ''>('');
   const [interestRate, setInterestRate] = useState<number | ''>('');
   const [years, setYears] = useState<number | ''>('');
@@ -26,6 +30,11 @@ const FDCalculator = () => {
       maturityAmount: parseFloat(maturityAmount.toFixed(2)),
       interest: parseFloat(interest.toFixed(2))
     });
+    
+    // Call the onCalculate callback if provided
+    if (onCalculate) {
+      onCalculate(Number(principal), Number(interestRate), Number(years));
+    }
   };
 
   return (

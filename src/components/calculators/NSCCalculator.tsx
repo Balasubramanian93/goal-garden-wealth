@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const NSCCalculator = () => {
+interface NSCCalculatorProps {
+  onCalculate?: (principal: number, interestRate: number) => void;
+}
+
+const NSCCalculator = ({ onCalculate }: NSCCalculatorProps = {}) => {
   const [principal, setPrincipal] = useState<number | ''>('');
   const [interestRate, setInterestRate] = useState<number | ''>(7.7); // Current NSC rate
   const [result, setResult] = useState<{ maturityAmount: number, totalInterest: number } | null>(null);
@@ -29,6 +33,11 @@ const NSCCalculator = () => {
       maturityAmount: parseFloat(maturityAmount.toFixed(2)),
       totalInterest: parseFloat(totalInterest.toFixed(2))
     });
+    
+    // Call the onCalculate callback if provided
+    if (onCalculate) {
+      onCalculate(P, Number(interestRate));
+    }
   };
 
   return (

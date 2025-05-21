@@ -60,52 +60,54 @@ const CalculatorDetailLayout = ({
           </div>
 
           {/* Right column - Chart */}
-          <div className="bg-card rounded-lg border p-6">
+          <div className="bg-card rounded-lg border p-6 overflow-hidden">
             <h2 className="text-xl font-semibold mb-4">Projected Growth</h2>
             {chartData.length > 0 ? (
-              <ChartContainer
-                className="h-[300px]"
-                config={{
-                  amount: {
-                    label: "Amount",
-                    theme: {
-                      light: "hsl(var(--primary))",
-                      dark: "hsl(var(--primary))",
+              <div className="w-full h-[300px]">
+                <ChartContainer
+                  className="h-full"
+                  config={{
+                    amount: {
+                      label: "Amount",
+                      theme: {
+                        light: "hsl(var(--primary))",
+                        dark: "hsl(var(--primary))",
+                      },
                     },
-                  },
-                }}
-              >
-                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis tickFormatter={(value) => `₹${value.toLocaleString()}`} />
-                  <ChartTooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <ChartTooltipContent 
-                            active={active} 
-                            payload={payload} 
-                            formatter={(value) => [
-                              `₹${Number(value).toLocaleString()}`,
-                              "Amount"
-                            ]} 
-                          />
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    name="amount"
-                    stroke="hsl(var(--primary))"
-                    activeDot={{ r: 8 }}
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ChartContainer>
+                  }}
+                >
+                  <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis tickFormatter={(value) => `₹${value.toLocaleString()}`} />
+                    <ChartTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <ChartTooltipContent 
+                              active={active} 
+                              payload={payload} 
+                              formatter={(value) => [
+                                `₹${Number(value).toLocaleString()}`,
+                                "Amount"
+                              ]} 
+                            />
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      name="amount"
+                      stroke="hsl(var(--primary))"
+                      activeDot={{ r: 8 }}
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </div>
             ) : (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                 Enter values and calculate to see projection

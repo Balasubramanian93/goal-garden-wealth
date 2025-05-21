@@ -17,6 +17,15 @@ import Demo from "./pages/Demo";
 import Tools from "./pages/Tools";
 import FDCalculatorPage from "./pages/calculators/FDCalculatorPage";
 import CAGRCalculatorPage from "./pages/calculators/CAGRCalculatorPage";
+import RDCalculatorPage from "./pages/calculators/RDCalculatorPage";
+import SIPCalculatorPage from "./pages/calculators/SIPCalculatorPage";
+import GoalSIPCalculatorPage from "./pages/calculators/GoalSIPCalculatorPage";
+import FIRECalculatorPage from "./pages/calculators/FIRECalculatorPage";
+import NSCCalculatorPage from "./pages/calculators/NSCCalculatorPage";
+import HRACalculatorPage from "./pages/calculators/HRACalculatorPage";
+import SSYCalculatorPage from "./pages/calculators/SSYCalculatorPage";
+import MFCalculatorPage from "./pages/calculators/MFCalculatorPage";
+import IRRCalculatorPage from "./pages/calculators/IRRCalculatorPage";
 
 const queryClient = new QueryClient();
 
@@ -32,8 +41,20 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/tools" element={<Tools />} />
+            
+            {/* Calculator Routes */}
             <Route path="/calculators/fd" element={<FDCalculatorPage />} />
             <Route path="/calculators/cagr" element={<CAGRCalculatorPage />} />
+            <Route path="/calculators/rd" element={<RDCalculatorPage />} />
+            <Route path="/calculators/sip" element={<SIPCalculatorPage />} />
+            <Route path="/calculators/goal-sip" element={<GoalSIPCalculatorPage />} />
+            <Route path="/calculators/fire" element={<FIRECalculatorPage />} />
+            <Route path="/calculators/nsc" element={<NSCCalculatorPage />} />
+            <Route path="/calculators/hra" element={<HRACalculatorPage />} />
+            <Route path="/calculators/ssy" element={<SSYCalculatorPage />} />
+            <Route path="/calculators/mf" element={<MFCalculatorPage />} />
+            <Route path="/calculators/irr" element={<IRRCalculatorPage />} />
+            
             <Route 
               path="/portfolio" 
               element={

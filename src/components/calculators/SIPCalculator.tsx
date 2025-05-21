@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const SIPCalculator = () => {
+interface SIPCalculatorProps {
+  onCalculate?: (monthlyInvestment: number, expectedReturn: number, years: number) => void;
+}
+
+const SIPCalculator = ({ onCalculate }: SIPCalculatorProps = {}) => {
   const [monthlyInvestment, setMonthlyInvestment] = useState<number | ''>('');
   const [expectedReturn, setExpectedReturn] = useState<number | ''>('');
   const [years, setYears] = useState<number | ''>('');
@@ -31,6 +35,11 @@ const SIPCalculator = () => {
       wealthGained: parseFloat(wealthGained.toFixed(2)),
       maturityValue: parseFloat(maturityValue.toFixed(2))
     });
+    
+    // Call the onCalculate callback if provided
+    if (onCalculate) {
+      onCalculate(P, Number(expectedReturn), Number(years));
+    }
   };
 
   return (
