@@ -5,7 +5,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogFooter 
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,15 @@ import { Calendar, Flag, Target, Home, Briefcase } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Goal, useGoalsStore } from "@/store/goalsStore";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage 
+} from "@/components/ui/form";
 
 type IconOption = {
   type: Goal['iconType'];
@@ -39,11 +49,13 @@ interface GoalFormModalProps {
 export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps) {
   const { addGoal, updateGoal, getGoalById } = useGoalsStore();
   const [selectedIcon, setSelectedIcon] = useState<Goal['iconType']>('Target');
+  const [inputMode, setInputMode] = useState<'target' | 'contribution'>('target');
+  const [calculatedTarget, setCalculatedTarget] = useState<number | null>(null);
   
   const isEditing = goalId !== undefined;
   const existingGoal = isEditing ? getGoalById(goalId) : undefined;
   
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<GoalFormValues>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<GoalFormValues>({
     defaultValues: {
       name: "",
       targetAmount: 0,
@@ -54,6 +66,35 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
       iconType: 'Target'
     }
   });
+
+  // Watch for changes in form values that would affect the target calculation
+  const monthlyContribution = watch('monthlyContribution');
+  const expectedReturn = watch('expectedReturn');
+  const targetDate = watch('targetDate');
+
+  // Calculate the target amount based on monthly contribution, interest rate, and years
+  useEffect(() => {
+    if (inputMode === 'contribution' && monthlyContribution && expectedReturn && targetDate) {
+      try {
+        const currentYear = new Date().getFullYear();
+        const years = parseInt(targetDate) - currentYear;
+        
+        if (years > 0) {
+          // Convert annual rate to monthly rate
+          const monthlyRate = expectedReturn / 100 / 12;
+          const months = years * 12;
+          
+          // SIP Future Value formula: P * ((1+r)^n - 1) * (1+r)/r
+          const futureValue = monthlyContribution * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+          
+          setCalculatedTarget(Math.round(futureValue));
+          setValue('targetAmount', Math.round(futureValue));
+        }
+      } catch (error) {
+        console.error('Error calculating target amount:', error);
+      }
+    }
+  }, [inputMode, monthlyContribution, expectedReturn, targetDate, setValue]);
 
   useEffect(() => {
     if (existingGoal && open) {
@@ -72,6 +113,10 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
       setSelectedIcon('Target');
     }
   }, [existingGoal, open, reset, setValue]);
+
+  const handleModeChange = (newMode: 'target' | 'contribution') => {
+    setInputMode(newMode);
+  };
 
   const onSubmit = (data: GoalFormValues) => {
     try {
@@ -93,103 +138,157 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
     setValue("iconType", iconType);
   };
 
+  const formatCurrency = (amount: number) => {
+    if (amount >= 10000000) {
+      return `₹${(amount / 10000000).toFixed(2)} Cr`;
+    } else if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(1)} L`;
+    } else {
+      return `₹${amount.toLocaleString()}`;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Goal" : "Add New Goal"}</DialogTitle>
+          <DialogDescription>
+            Create a new financial goal by entering either your target amount or your planned contribution.
+          </DialogDescription>
         </DialogHeader>
+        
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Goal Name</Label>
-              <Input
-                id="name"
-                placeholder="e.g., Child's Education"
-                {...register("name", { required: "Goal name is required" })}
-              />
-              {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Goal Name</Label>
+            <Input
+              id="name"
+              placeholder="e.g., Child's Education"
+              {...register("name", { required: "Goal name is required" })}
+            />
+            {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
+          </div>
 
-            <div className="space-y-2">
-              <Label>Choose Icon</Label>
-              <div className="flex gap-2">
-                {iconOptions.map((option) => (
-                  <Button
-                    key={option.type}
-                    type="button"
-                    variant={selectedIcon === option.type ? "default" : "outline"}
-                    className="h-10 w-10 p-0"
-                    onClick={() => handleIconSelect(option.type)}
-                  >
-                    {option.icon}
-                  </Button>
-                ))}
+          <div className="space-y-2">
+            <Label>Choose Icon</Label>
+            <div className="flex gap-2">
+              {iconOptions.map((option) => (
+                <Button
+                  key={option.type}
+                  type="button"
+                  variant={selectedIcon === option.type ? "default" : "outline"}
+                  className="h-10 w-10 p-0"
+                  onClick={() => handleIconSelect(option.type)}
+                >
+                  {option.icon}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <Tabs 
+            defaultValue="target" 
+            value={inputMode}
+            onValueChange={(value) => handleModeChange(value as 'target' | 'contribution')}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="target">Set Target Amount</TabsTrigger>
+              <TabsTrigger value="contribution">Calculate from Contribution</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="target" className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="targetAmount">Target Amount (₹)</Label>
+                  <Input
+                    id="targetAmount"
+                    type="number"
+                    placeholder="5000000"
+                    {...register("targetAmount", { 
+                      required: "Target amount is required",
+                      min: { value: 1, message: "Amount must be positive" }
+                    })}
+                  />
+                  {errors.targetAmount && <p className="text-sm text-red-500">{errors.targetAmount.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="currentAmount">Current Amount (₹)</Label>
+                  <Input
+                    id="currentAmount"
+                    type="number"
+                    placeholder="1000000"
+                    {...register("currentAmount", { 
+                      required: "Current amount is required",
+                      min: { value: 0, message: "Amount cannot be negative" }
+                    })}
+                  />
+                  {errors.currentAmount && <p className="text-sm text-red-500">{errors.currentAmount.message}</p>}
+                </div>
               </div>
-            </div>
+            </TabsContent>
 
-            <div className="grid grid-cols-2 gap-4">
+            <TabsContent value="contribution" className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="targetAmount">Target Amount (₹)</Label>
+                <Label htmlFor="monthlyContribution">Monthly Contribution (₹)</Label>
                 <Input
-                  id="targetAmount"
+                  id="monthlyContribution"
                   type="number"
-                  placeholder="5000000"
-                  {...register("targetAmount", { 
-                    required: "Target amount is required",
+                  placeholder="15000"
+                  {...register("monthlyContribution", { 
+                    required: "Monthly contribution is required",
                     min: { value: 1, message: "Amount must be positive" }
                   })}
                 />
-                {errors.targetAmount && <p className="text-sm text-red-500">{errors.targetAmount.message}</p>}
+                {errors.monthlyContribution && <p className="text-sm text-red-500">{errors.monthlyContribution.message}</p>}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="currentAmount">Current Amount (₹)</Label>
-                <Input
-                  id="currentAmount"
-                  type="number"
-                  placeholder="1000000"
-                  {...register("currentAmount", { 
-                    required: "Current amount is required",
-                    min: { value: 0, message: "Amount cannot be negative" }
-                  })}
-                />
-                {errors.currentAmount && <p className="text-sm text-red-500">{errors.currentAmount.message}</p>}
-              </div>
-            </div>
+              
+              {calculatedTarget && inputMode === 'contribution' && (
+                <div className="bg-primary/10 p-4 rounded-md mt-4 text-center">
+                  <p className="text-sm font-medium">Projected Target Amount</p>
+                  <p className="text-2xl font-bold text-primary">{formatCurrency(calculatedTarget)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Based on your monthly contribution over time
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="targetDate">Target Year</Label>
-                <Input
-                  id="targetDate"
-                  type="number"
-                  placeholder="2035"
-                  {...register("targetDate", { 
-                    required: "Target year is required",
-                    min: { 
-                      value: new Date().getFullYear(), 
-                      message: "Year must be in the future" 
-                    }
-                  })}
-                />
-                {errors.targetDate && <p className="text-sm text-red-500">{errors.targetDate.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="expectedReturn">Expected Return (%)</Label>
-                <Input
-                  id="expectedReturn"
-                  type="number"
-                  placeholder="8"
-                  {...register("expectedReturn", { 
-                    required: "Expected return is required",
-                    min: { value: 1, message: "Return must be positive" },
-                    max: { value: 30, message: "Return is too high" }
-                  })}
-                />
-                {errors.expectedReturn && <p className="text-sm text-red-500">{errors.expectedReturn.message}</p>}
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="targetDate">Target Year</Label>
+              <Input
+                id="targetDate"
+                type="number"
+                placeholder="2035"
+                {...register("targetDate", { 
+                  required: "Target year is required",
+                  min: { 
+                    value: new Date().getFullYear(), 
+                    message: "Year must be in the future" 
+                  }
+                })}
+              />
+              {errors.targetDate && <p className="text-sm text-red-500">{errors.targetDate.message}</p>}
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="expectedReturn">Expected Return (%)</Label>
+              <Input
+                id="expectedReturn"
+                type="number"
+                placeholder="8"
+                {...register("expectedReturn", { 
+                  required: "Expected return is required",
+                  min: { value: 1, message: "Return must be positive" },
+                  max: { value: 30, message: "Return is too high" }
+                })}
+              />
+              {errors.expectedReturn && <p className="text-sm text-red-500">{errors.expectedReturn.message}</p>}
+            </div>
+          </div>
 
+          {inputMode === 'target' && (
             <div className="space-y-2">
               <Label htmlFor="monthlyContribution">Monthly Contribution (₹)</Label>
               <Input
@@ -203,7 +302,24 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
               />
               {errors.monthlyContribution && <p className="text-sm text-red-500">{errors.monthlyContribution.message}</p>}
             </div>
-          </div>
+          )}
+
+          {inputMode === 'contribution' && (
+            <div className="space-y-2">
+              <Label htmlFor="currentAmount">Current Amount (₹)</Label>
+              <Input
+                id="currentAmount"
+                type="number"
+                placeholder="1000000"
+                {...register("currentAmount", { 
+                  required: "Current amount is required",
+                  min: { value: 0, message: "Amount cannot be negative" }
+                })}
+              />
+              {errors.currentAmount && <p className="text-sm text-red-500">{errors.currentAmount.message}</p>}
+            </div>
+          )}
+
           <DialogFooter>
             <Button type="submit">
               {isEditing ? "Save Changes" : "Add Goal"}
