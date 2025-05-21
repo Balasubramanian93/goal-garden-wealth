@@ -23,6 +23,7 @@ import {
   FormLabel,
   FormMessage 
 } from "@/components/ui/form";
+import { Slider } from "@/components/ui/slider";
 
 type IconOption = {
   type: Goal['iconType'];
@@ -50,6 +51,7 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
   const [selectedIcon, setSelectedIcon] = useState<Goal['iconType']>('Target');
   const [inputMode, setInputMode] = useState<'target' | 'contribution'>('target');
   const [calculatedTarget, setCalculatedTarget] = useState<number | null>(null);
+  const [timePeriod, setTimePeriod] = useState<number>(5); // Default to 5 years
   
   const isEditing = goalId !== undefined;
   const existingGoal = isEditing ? getGoalById(goalId) : undefined;
@@ -59,7 +61,7 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
       name: "",
       targetAmount: 0,
       currentAmount: 0,
-      targetDate: new Date().getFullYear() + 5 + "",
+      targetDate: (new Date().getFullYear() + 5) + "",
       monthlyContribution: 0,
       expectedReturn: 8,
       iconType: 'Target'
@@ -69,31 +71,31 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
   // Watch for changes in form values that would affect the target calculation
   const monthlyContribution = watch('monthlyContribution');
   const expectedReturn = watch('expectedReturn');
-  const targetDate = watch('targetDate');
+  const currentAmount = watch('currentAmount');
 
   // Calculate the target amount based on monthly contribution, interest rate, and years
   useEffect(() => {
-    if (inputMode === 'contribution' && monthlyContribution && expectedReturn && targetDate) {
+    if (inputMode === 'contribution' && monthlyContribution && expectedReturn && timePeriod) {
       try {
-        const currentYear = new Date().getFullYear();
-        const years = parseInt(targetDate) - currentYear;
+        // Convert annual rate to monthly rate
+        const monthlyRate = expectedReturn / 100 / 12;
+        const months = timePeriod * 12;
         
-        if (years > 0) {
-          // Convert annual rate to monthly rate
-          const monthlyRate = expectedReturn / 100 / 12;
-          const months = years * 12;
-          
-          // SIP Future Value formula: P * ((1+r)^n - 1) * (1+r)/r
-          const futureValue = monthlyContribution * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
-          
-          setCalculatedTarget(Math.round(futureValue));
-          setValue('targetAmount', Math.round(futureValue));
-        }
+        // SIP Future Value formula: P * ((1+r)^n - 1) * (1+r)/r
+        // Add current amount with compound interest
+        const currentAmountValue = Number(currentAmount) || 0;
+        const currentAmountFuture = currentAmountValue * Math.pow(1 + (expectedReturn / 100), timePeriod);
+        const monthlyContributionFuture = monthlyContribution * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+        
+        const futureValue = currentAmountFuture + monthlyContributionFuture;
+        
+        setCalculatedTarget(Math.round(futureValue));
+        setValue('targetAmount', Math.round(futureValue));
       } catch (error) {
         console.error('Error calculating target amount:', error);
       }
     }
-  }, [inputMode, monthlyContribution, expectedReturn, targetDate, setValue]);
+  }, [inputMode, monthlyContribution, expectedReturn, timePeriod, currentAmount, setValue]);
 
   useEffect(() => {
     if (existingGoal && open) {
@@ -101,6 +103,12 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
       setValue("name", existingGoal.name);
       setValue("targetAmount", existingGoal.targetAmount);
       setValue("currentAmount", existingGoal.currentAmount);
+      
+      // Calculate time period from target date
+      const currentYear = new Date().getFullYear();
+      const targetYear = parseInt(existingGoal.targetDate);
+      setTimePeriod(targetYear - currentYear);
+      
       setValue("targetDate", existingGoal.targetDate);
       setValue("monthlyContribution", existingGoal.monthlyContribution);
       setValue("expectedReturn", existingGoal.expectedReturn);
@@ -109,9 +117,19 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
     } else if (open) {
       // Reset form when opening for a new goal
       reset();
+      setTimePeriod(5);
       setSelectedIcon('Target');
     }
   }, [existingGoal, open, reset, setValue]);
+
+  const handleTimePeriodChange = (value: number[]) => {
+    const years = value[0];
+    setTimePeriod(years);
+    
+    // Update target date based on time period
+    const targetYear = new Date().getFullYear() + years;
+    setValue("targetDate", targetYear.toString());
+  };
 
   const handleModeChange = (newMode: 'target' | 'contribution') => {
     setInputMode(newMode);
@@ -242,34 +260,48 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
                 {errors.monthlyContribution && <p className="text-sm text-red-500">{errors.monthlyContribution.message}</p>}
               </div>
               
+              <div className="space-y-2">
+                <Label htmlFor="currentAmount">Current Amount (₹) (Optional)</Label>
+                <Input
+                  id="currentAmount"
+                  type="number"
+                  placeholder="100000"
+                  {...register("currentAmount", { 
+                    min: { value: 0, message: "Amount cannot be negative" }
+                  })}
+                />
+                {errors.currentAmount && <p className="text-sm text-red-500">{errors.currentAmount.message}</p>}
+              </div>
+              
               {calculatedTarget && inputMode === 'contribution' && (
                 <div className="bg-primary/10 p-4 rounded-md mt-4 text-center">
                   <p className="text-sm font-medium">Projected Target Amount</p>
                   <p className="text-2xl font-bold text-primary">{formatCurrency(calculatedTarget)}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Based on your monthly contribution over time
+                    Based on your monthly contribution over {timePeriod} years
                   </p>
                 </div>
               )}
             </TabsContent>
           </Tabs>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="targetDate">Target Year</Label>
-              <Input
-                id="targetDate"
-                type="number"
-                placeholder="2035"
+              <Label htmlFor="timePeriod">Time Period: {timePeriod} years</Label>
+              <Slider 
+                defaultValue={[5]} 
+                max={50} 
+                step={1}
+                value={[timePeriod]}
+                onValueChange={handleTimePeriodChange}
+              />
+              {/* Hidden field to keep the targetDate value for form submission */}
+              <input 
+                type="hidden" 
                 {...register("targetDate", { 
-                  required: "Target year is required",
-                  min: { 
-                    value: new Date().getFullYear(), 
-                    message: "Year must be in the future" 
-                  }
+                  required: "Target year is required"
                 })}
               />
-              {errors.targetDate && <p className="text-sm text-red-500">{errors.targetDate.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="expectedReturn">Expected Return (%)</Label>
@@ -300,22 +332,6 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
                 })}
               />
               {errors.monthlyContribution && <p className="text-sm text-red-500">{errors.monthlyContribution.message}</p>}
-            </div>
-          )}
-
-          {inputMode === 'contribution' && (
-            <div className="space-y-2">
-              <Label htmlFor="currentAmount">Current Amount (₹)</Label>
-              <Input
-                id="currentAmount"
-                type="number"
-                placeholder="1000000"
-                {...register("currentAmount", { 
-                  required: "Current amount is required",
-                  min: { value: 0, message: "Amount cannot be negative" }
-                })}
-              />
-              {errors.currentAmount && <p className="text-sm text-red-500">{errors.currentAmount.message}</p>}
             </div>
           )}
 
