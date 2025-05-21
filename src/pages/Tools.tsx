@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
-import { Calculator, TrendingUp, PiggyBank, Target, Fire } from "lucide-react";
+import { Calculator, TrendingUp, PiggyBank, Target, Flame } from "lucide-react";
 import CalculatorCard from "@/components/calculators/CalculatorCard";
 import CAGRCalculator from "@/components/calculators/CAGRCalculator";
 import FDCalculator from "@/components/calculators/FDCalculator";
@@ -68,7 +68,7 @@ const Tools = () => {
     },
     { 
       title: "FIRE", 
-      icon: <Fire />, 
+      icon: <Flame />, 
       description: "Know exactly how much you need to retire", 
       calculator: <FIRECalculator /> 
     },
