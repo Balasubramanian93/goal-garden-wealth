@@ -2,15 +2,17 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
 import { ReactNode, useState } from "react";
+import { Link } from "react-router-dom";
 
 interface CalculatorCardProps {
   title: string;
   icon: ReactNode;
   description: string;
   calculator: ReactNode;
+  route?: string;
 }
 
-const CalculatorCard = ({ title, icon, description, calculator }: CalculatorCardProps) => {
+const CalculatorCard = ({ title, icon, description, calculator, route }: CalculatorCardProps) => {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -25,15 +27,24 @@ const CalculatorCard = ({ title, icon, description, calculator }: CalculatorCard
         <p className="text-sm text-muted-foreground">{description}</p>
       </CardContent>
       <CardFooter className="mt-auto">
-        <button
-          className="flex items-center text-primary text-sm"
-          onClick={() => setExpanded(!expanded)}
-        >
-          {expanded ? "Close" : "Calculate Now"} <ArrowRight size={16} className="ml-1" />
-        </button>
+        {route ? (
+          <Link 
+            to={route}
+            className="flex items-center text-primary text-sm"
+          >
+            Calculate Now <ArrowRight size={16} className="ml-1" />
+          </Link>
+        ) : (
+          <button
+            className="flex items-center text-primary text-sm"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? "Close" : "Calculate Now"} <ArrowRight size={16} className="ml-1" />
+          </button>
+        )}
       </CardFooter>
       
-      {expanded && (
+      {expanded && !route && (
         <div className="px-6 pb-6">
           <div className="border-t pt-4">
             {calculator}

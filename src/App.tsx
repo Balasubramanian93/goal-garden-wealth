@@ -15,6 +15,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Demo from "./pages/Demo";
 import Tools from "./pages/Tools";
+import FDCalculatorPage from "./pages/calculators/FDCalculatorPage";
+import CAGRCalculatorPage from "./pages/calculators/CAGRCalculatorPage";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/tools" element={<Tools />} />
+            <Route path="/calculators/fd" element={<FDCalculatorPage />} />
+            <Route path="/calculators/cagr" element={<CAGRCalculatorPage />} />
             <Route 
               path="/portfolio" 
               element={

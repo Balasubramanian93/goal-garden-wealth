@@ -22,7 +22,8 @@ const Tools = () => {
       title: "CAGR", 
       icon: <TrendingUp />, 
       description: "Figure out the compound annual growth rate in a flash", 
-      calculator: <CAGRCalculator />
+      calculator: <CAGRCalculator />,
+      route: "/calculators/cagr"
     },
     { 
       title: "NSC", 
@@ -76,7 +77,8 @@ const Tools = () => {
       title: "FD", 
       icon: <PiggyBank />, 
       description: "Calculate returns on fixed deposits", 
-      calculator: <FDCalculator /> 
+      calculator: <FDCalculator />,
+      route: "/calculators/fd"
     },
     { 
       title: "RD", 
@@ -106,6 +108,7 @@ const Tools = () => {
               icon={calc.icon}
               description={calc.description}
               calculator={calc.calculator}
+              route={calc.route}
             />
           ))}
         </div>
