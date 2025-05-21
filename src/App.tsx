@@ -29,6 +29,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/tools" element={<Tools />} />
             <Route 
               path="/portfolio" 
               element={
@@ -50,14 +51,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Analytics />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/tools" 
-              element={
-                <ProtectedRoute>
-                  <Tools />
                 </ProtectedRoute>
               } 
             />

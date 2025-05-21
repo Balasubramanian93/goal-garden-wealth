@@ -1,171 +1,116 @@
 
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator } from "lucide-react";
-
-type Calculator = {
-  id: string;
-  name: string;
-  description: string;
-  component: React.ReactNode;
-};
+import { Calculator, TrendingUp, PiggyBank, Target, Fire } from "lucide-react";
+import CalculatorCard from "@/components/calculators/CalculatorCard";
+import CAGRCalculator from "@/components/calculators/CAGRCalculator";
+import FDCalculator from "@/components/calculators/FDCalculator";
+import RDCalculator from "@/components/calculators/RDCalculator";
+import SIPCalculator from "@/components/calculators/SIPCalculator";
+import GoalSIPCalculator from "@/components/calculators/GoalSIPCalculator";
+import MFCalculator from "@/components/calculators/MFCalculator";
+import FIRECalculator from "@/components/calculators/FIRECalculator";
+import NSCCalculator from "@/components/calculators/NSCCalculator";
+import HRACalculator from "@/components/calculators/HRACalculator";
+import SSYCalculator from "@/components/calculators/SSYCalculator";
+import IRRCalculator from "@/components/calculators/IRRCalculator";
 
 const Tools = () => {
-  const calculators: Calculator[] = [
+  // Define the calculator tools
+  const calculators = [
     { 
-      id: "fd", 
-      name: "Fixed Deposit Calculator", 
-      description: "Calculate returns on fixed deposits",
-      component: <FDCalculator />
+      title: "CAGR", 
+      icon: <TrendingUp />, 
+      description: "Figure out the compound annual growth rate in a flash", 
+      calculator: <CAGRCalculator />
     },
     { 
-      id: "rd", 
-      name: "Recurring Deposit Calculator", 
-      description: "Calculate returns on recurring deposits",
-      component: <RDCalculator />
+      title: "NSC", 
+      icon: <PiggyBank />, 
+      description: "How much return does NSC give you? Find out!", 
+      calculator: <NSCCalculator /> 
     },
     { 
-      id: "cagr", 
-      name: "CAGR Calculator", 
-      description: "Calculate compound annual growth rate",
-      component: <CAGRCalculator />
+      title: "HRA", 
+      icon: <Calculator />, 
+      description: "The most accurate HRA calculator out there", 
+      calculator: <HRACalculator /> 
     },
     { 
-      id: "mf", 
-      name: "Mutual Fund Returns", 
-      description: "Calculate potential returns on mutual fund investments",
-      component: <MFCalculator />
+      title: "MF", 
+      icon: <TrendingUp />, 
+      description: "Find out your mutual fund corpus on maturity!", 
+      calculator: <MFCalculator /> 
     },
     { 
-      id: "sip", 
-      name: "SIP Calculator", 
-      description: "Calculate returns on systematic investment plans",
-      component: <SIPCalculator />
+      title: "SSY", 
+      icon: <PiggyBank />, 
+      description: "Should you invest in SSY? Check for yourself!", 
+      calculator: <SSYCalculator /> 
     },
     { 
-      id: "goal-sip", 
-      name: "Goal SIP Calculator", 
-      description: "Calculate SIP needed to reach a financial goal",
-      component: <GoalSIPCalculator />
+      title: "IRR", 
+      icon: <TrendingUp />, 
+      description: "Calculate returns of investment with multiple cashflow", 
+      calculator: <IRRCalculator /> 
     },
     { 
-      id: "fire", 
-      name: "FIRE Calculator", 
-      description: "Financial Independence, Retire Early calculator",
-      component: <FIRECalculator />
+      title: "SIP", 
+      icon: <PiggyBank />, 
+      description: "How much can you save by starting an SIP? Find out!", 
+      calculator: <SIPCalculator /> 
+    },
+    { 
+      title: "Goal SIP", 
+      icon: <Target />, 
+      description: "Know the SIP amount required to achieve your goals", 
+      calculator: <GoalSIPCalculator /> 
+    },
+    { 
+      title: "FIRE", 
+      icon: <Fire />, 
+      description: "Know exactly how much you need to retire", 
+      calculator: <FIRECalculator /> 
+    },
+    { 
+      title: "FD", 
+      icon: <PiggyBank />, 
+      description: "Calculate returns on fixed deposits", 
+      calculator: <FDCalculator /> 
+    },
+    { 
+      title: "RD", 
+      icon: <PiggyBank />, 
+      description: "Calculate returns on recurring deposits", 
+      calculator: <RDCalculator /> 
     }
   ];
-
-  const [activeTab, setActiveTab] = useState(calculators[0].id);
-
+  
   return (
     <MainLayout>
       <div className="container py-6">
         <div className="flex items-center gap-2 mb-6">
           <Calculator size={32} className="text-primary" />
-          <h1 className="text-3xl font-bold">Financial Tools</h1>
+          <h1 className="text-3xl font-bold">Financial Calculators</h1>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Calculate Your Financial Future</CardTitle>
-            <CardDescription>
-              Use these calculators to help plan your investments and financial goals
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
-                {calculators.map((calc) => (
-                  <TabsTrigger key={calc.id} value={calc.id} className="whitespace-nowrap">
-                    {calc.name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              
-              {calculators.map((calc) => (
-                <TabsContent key={calc.id} value={calc.id}>
-                  {calc.component}
-                </TabsContent>
-              ))}
-            </Tabs>
-          </CardContent>
-        </Card>
+        <p className="text-muted-foreground mb-8">
+          Use these powerful calculators to plan your investments, track your goals, and build your financial future.
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {calculators.map((calc, index) => (
+            <CalculatorCard
+              key={index}
+              title={calc.title}
+              icon={calc.icon}
+              description={calc.description}
+              calculator={calc.calculator}
+            />
+          ))}
+        </div>
       </div>
     </MainLayout>
-  );
-};
-
-// Calculator component implementations
-const FDCalculator = () => {
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">Fixed Deposit Calculator</h3>
-      <p>Calculate returns on your fixed deposit investment.</p>
-      {/* Implement FD calculator form here */}
-    </div>
-  );
-};
-
-const RDCalculator = () => {
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">Recurring Deposit Calculator</h3>
-      <p>Calculate returns on your recurring deposit investment.</p>
-      {/* Implement RD calculator form here */}
-    </div>
-  );
-};
-
-const CAGRCalculator = () => {
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">CAGR Calculator</h3>
-      <p>Calculate the compound annual growth rate of your investment.</p>
-      {/* Implement CAGR calculator form here */}
-    </div>
-  );
-};
-
-const MFCalculator = () => {
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">Mutual Fund Returns Calculator</h3>
-      <p>Calculate potential returns on mutual fund investments.</p>
-      {/* Implement MF calculator form here */}
-    </div>
-  );
-};
-
-const SIPCalculator = () => {
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">SIP Calculator</h3>
-      <p>Calculate returns on systematic investment plans.</p>
-      {/* Implement SIP calculator form here */}
-    </div>
-  );
-};
-
-const GoalSIPCalculator = () => {
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">Goal SIP Calculator</h3>
-      <p>Calculate the SIP amount needed to reach your financial goal.</p>
-      {/* Implement Goal SIP calculator form here */}
-    </div>
-  );
-};
-
-const FIRECalculator = () => {
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">FIRE Calculator</h3>
-      <p>Calculate when you can achieve financial independence and retire early.</p>
-      {/* Implement FIRE calculator form here */}
-    </div>
   );
 };
 
