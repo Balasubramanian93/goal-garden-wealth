@@ -10,13 +10,26 @@ const GoalSIPCalculatorPage = () => {
   // Subscribe to the calculation event
   const handleCalculate = (sipAmount: number, expectedReturn: number, years: number, targetAmount: number) => {
     const data = [];
-    const r = expectedReturn / 100 / 12; // Monthly rate
+    const monthlyRate = expectedReturn / 100 / 12; // Monthly rate
+    let totalInvestment = 0;
     
     // Create chart data points (yearly)
     for (let i = 0; i <= years; i++) {
       const months = i * 12;
       const P = sipAmount;
-      const maturityValue = months === 0 ? 0 : P * (((Math.pow(1 + r, months) - 1) / r) * (1 + r));
+      
+      // Don't include compounding factor in the first period (i=0)
+      if (months === 0) {
+        data.push({
+          name: `Year ${i}`,
+          value: 0
+        });
+        continue;
+      }
+      
+      // SIP Future Value formula: P * ((1+r)^n - 1) / r
+      const maturityValue = P * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+      totalInvestment = P * months;
       
       data.push({
         name: `Year ${i}`,

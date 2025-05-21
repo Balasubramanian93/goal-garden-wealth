@@ -81,11 +81,12 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
         const monthlyRate = expectedReturn / 100 / 12;
         const months = timePeriod * 12;
         
-        // SIP Future Value formula: P * ((1+r)^n - 1) * (1+r)/r
-        // Add current amount with compound interest
+        // Current amount with compound interest
         const currentAmountValue = Number(currentAmount) || 0;
-        const currentAmountFuture = currentAmountValue * Math.pow(1 + (expectedReturn / 100), timePeriod);
-        const monthlyContributionFuture = monthlyContribution * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+        const currentAmountFuture = currentAmountValue * Math.pow(1 + monthlyRate, months);
+        
+        // SIP Future Value formula: P * ((1+r)^n - 1) * (1+r)/r
+        const monthlyContributionFuture = monthlyContribution * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
         
         const futureValue = currentAmountFuture + monthlyContributionFuture;
         

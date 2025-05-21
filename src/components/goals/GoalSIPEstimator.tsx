@@ -22,18 +22,19 @@ const GoalSIPEstimator = ({
 
   useEffect(() => {
     if (targetAmount > 0 && expectedReturn > 0 && years > 0) {
+      // Convert annual rate to monthly rate
+      const monthlyRate = expectedReturn / 100 / 12;
+      const months = years * 12;
+      
       // First calculate what the current amount will grow to
-      const currentAmountFuture = currentAmount * Math.pow(1 + (expectedReturn / 100), years);
+      const currentAmountFuture = currentAmount * Math.pow(1 + monthlyRate, months);
       
       // Determine how much more we need from monthly SIPs
       const remainingTarget = Math.max(0, targetAmount - currentAmountFuture);
       
       // Formula to calculate monthly SIP needed to reach goal: 
-      // FV = P * ((1+r)^n - 1) * (1+r)/r
-      // So P = FV * r / ((1+r)^n - 1) / (1+r)
+      // FV = P * ((1+r)^n - 1) * (1+r)/r  =>  P = FV * r / ((1+r)^n - 1)
       const FV = Number(remainingTarget);
-      const r = Number(expectedReturn) / 100 / 12; // Monthly rate
-      const n = Number(years) * 12; // Total months
       
       // If target is already reached with current amount's growth
       if (FV <= 0) {
@@ -44,7 +45,7 @@ const GoalSIPEstimator = ({
         return;
       }
       
-      const monthlyAmount = FV * r / ((Math.pow(1 + r, n) - 1)) / (1 + r);
+      const monthlyAmount = FV * monthlyRate / (Math.pow(1 + monthlyRate, months) - 1);
       
       setSipAmount(parseFloat(monthlyAmount.toFixed(2)));
       
