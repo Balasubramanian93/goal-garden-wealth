@@ -1,5 +1,5 @@
 
-import { ArrowTrendingUpIcon } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 
 interface GoalRecommendationsProps {
   shortfall: number;
@@ -12,7 +12,7 @@ export function GoalRecommendations({ shortfall, monthlyIncrease, formatCurrency
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 shadow-sm">
       <div className="flex items-center gap-3 mb-4">
         <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full">
-          <ArrowTrendingUpIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
         </div>
         <h3 className="font-medium text-lg">Recommendations</h3>
       </div>
