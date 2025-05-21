@@ -23,12 +23,12 @@ const GoalSIPCalculator = ({ onCalculate }: GoalSIPCalculatorProps = {}) => {
 
     // Formula to calculate monthly SIP needed to reach goal: 
     // FV = P * ((1+r)^n - 1) * (1+r)/r
-    // So P = FV * r / ((1+r)^n - 1) * (1+r)
+    // So P = FV * r / ((1+r)^n - 1) / (1+r)
     const FV = Number(targetAmount);
     const r = Number(expectedReturn) / 100 / 12; // Monthly rate
     const n = Number(years) * 12; // Total months
     
-    const monthlyAmount = FV * r / (Math.pow(1 + r, n) - 1) / (1 + r);
+    const monthlyAmount = FV * r / ((Math.pow(1 + r, n) - 1)) / (1 + r);
     
     setSipAmount(parseFloat(monthlyAmount.toFixed(2)));
     
