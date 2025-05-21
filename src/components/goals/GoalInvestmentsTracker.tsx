@@ -249,7 +249,7 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
   };
 
   return (
-    <Card className="border shadow-sm">
+    <Card className="border shadow-sm h-full flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <div>
@@ -261,7 +261,7 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow overflow-auto">
         {isLoading ? (
           <div className="flex justify-center items-center p-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

@@ -229,19 +229,6 @@ const GoalDetailsPage = () => {
             formatCurrency={formatCurrency}
           />
           
-          {/* Investment Tracker */}
-          <GoalInvestmentsTracker 
-            goalId={goal.id} 
-            onInvestmentAdded={(amount) => {
-              // Update goal current amount in local state to avoid full page refresh
-              setGoal({
-                ...goal,
-                currentAmount: goal.currentAmount + amount,
-                progress: Math.min(100, Math.round(((goal.currentAmount + amount) / goal.targetAmount) * 100))
-              });
-            }} 
-          />
-          
           {/* Key Metrics */}
           <GoalMetricsGrid 
             monthlyContribution={goal.monthlyContribution}
@@ -251,76 +238,95 @@ const GoalDetailsPage = () => {
             formatCurrency={formatCurrency}
           />
           
-          {/* Comparison Chart */}
-          <div className="border rounded-lg p-6 bg-card shadow-sm">
-            <h3 className="font-medium text-lg mb-4">Growth Comparison</h3>
-            <div className="h-[350px] w-full">
-              <ChartContainer
-                className="h-full"
-                config={{
-                  expected: {
-                    label: "Expected Growth",
-                    theme: {
-                      light: "hsl(var(--primary))",
-                      dark: "hsl(var(--primary))",
+          {/* Rearranged section: Growth Comparison and Investment Tracker side by side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Comparison Chart */}
+            <div className="border rounded-lg p-6 bg-card shadow-sm">
+              <h3 className="font-medium text-lg mb-4">Growth Comparison</h3>
+              <div className="h-[350px] w-full">
+                <ChartContainer
+                  className="h-full"
+                  config={{
+                    expected: {
+                      label: "Expected Growth",
+                      theme: {
+                        light: "hsl(var(--primary))",
+                        dark: "hsl(var(--primary))",
+                      },
                     },
-                  },
-                  actual: {
-                    label: "Actual Progress",
-                    theme: {
-                      light: "#10b981",
-                      dark: "#10b981",
+                    actual: {
+                      label: "Actual Progress",
+                      theme: {
+                        light: "#10b981",
+                        dark: "#10b981",
+                      },
                     },
-                  },
-                }}
-              >
-                <LineChart 
-                  data={comparisonData} 
-                  margin={{ top: 5, right: 30, bottom: 5, left: 30 }}
+                  }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
-                  <YAxis tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`} />
-                  <ChartTooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <ChartTooltipContent 
-                            active={active} 
-                            payload={payload} 
-                            formatter={(value) => [
-                              `₹${Number(value).toLocaleString()}`,
-                              payload[0].dataKey === "expected" ? "Expected" : "Actual"
-                            ]} 
-                          />
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="expected"
-                    name="expected"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="actual"
-                    name="actual"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ChartContainer>
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                Compare your actual progress with the expected growth trajectory
-              </p>
+                  <LineChart 
+                    data={comparisonData} 
+                    margin={{ top: 5, right: 30, bottom: 5, left: 30 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="year" />
+                    <YAxis tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`} />
+                    <ChartTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <ChartTooltipContent 
+                              active={active} 
+                              payload={payload} 
+                              formatter={(value) => [
+                                `₹${Number(value).toLocaleString()}`,
+                                payload[0].dataKey === "expected" ? "Expected" : "Actual"
+                              ]} 
+                            />
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="expected"
+                      name="expected"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="actual"
+                      name="actual"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                    />
+                  </LineChart>
+                </ChartContainer>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Compare your actual progress with the expected growth trajectory
+                </p>
+              </div>
             </div>
+            
+            {/* Investment Tracker */}
+            <GoalInvestmentsTracker 
+              goalId={goal.id} 
+              onInvestmentAdded={(amount) => {
+                // Update goal current amount in local state to avoid full page refresh
+                const newAmount = goal.currentAmount + amount;
+                const newProgress = Math.min(100, Math.round((newAmount / goal.targetAmount) * 100));
+                
+                setGoal({
+                  ...goal,
+                  currentAmount: newAmount,
+                  progress: newProgress
+                });
+              }} 
+            />
           </div>
           
           {/* Recommendations */}
