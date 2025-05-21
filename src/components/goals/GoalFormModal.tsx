@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -189,7 +190,7 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] mx-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Goal" : "Add New Goal"}</DialogTitle>
           <DialogDescription>
@@ -379,3 +380,4 @@ export function GoalFormModal({ open, onOpenChange, goalId }: GoalFormModalProps
     </Dialog>
   );
 }
+
