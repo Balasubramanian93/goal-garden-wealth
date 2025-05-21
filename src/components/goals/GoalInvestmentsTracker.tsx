@@ -207,7 +207,7 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
 
       {/* Add Investment Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md fixed left-[50%] top-[50%] z-50 grid w-full translate-x-[-50%] translate-y-[-50%]">
           <DialogHeader>
             <DialogTitle>Add New Investment</DialogTitle>
             <DialogDescription>
