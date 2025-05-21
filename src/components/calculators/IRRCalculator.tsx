@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,11 @@ type Cashflow = {
   year: number;
 };
 
-const IRRCalculator = () => {
+interface IRRCalculatorProps {
+  onCalculate?: (cashflows: number[], irr: number) => void;
+}
+
+const IRRCalculator = ({ onCalculate }: IRRCalculatorProps = {}) => {
   const [initialInvestment, setInitialInvestment] = useState<number | ''>('');
   const [cashflows, setCashflows] = useState<Cashflow[]>([{ amount: 0, year: 1 }]);
   const [irr, setIrr] = useState<number | null>(null);
@@ -68,6 +71,14 @@ const IRRCalculator = () => {
       // Check if converged
       if (Math.abs(newRate - rate) < tolerance) {
         setIrr(newRate * 100);
+        
+        // Call the onCalculate callback if provided
+        if (onCalculate) {
+          // Convert cashflows array to just numbers for the chart
+          const cashflowValues = [-Number(initialInvestment), ...cashflows.map(cf => cf.amount)];
+          onCalculate(cashflowValues, newRate * 100);
+        }
+        
         return;
       }
       

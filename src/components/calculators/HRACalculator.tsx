@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +5,11 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Toggle } from "@/components/ui/toggle";
 
-const HRACalculator = () => {
+interface HRACalculatorProps {
+  onCalculate?: (basicSalary: number, hraReceived: number, rentPaid: number, metroCity: boolean) => void;
+}
+
+const HRACalculator = ({ onCalculate }: HRACalculatorProps = {}) => {
   const [basicSalary, setBasicSalary] = useState<number | ''>('');
   const [hraReceived, setHraReceived] = useState<number | ''>('');
   const [rentPaid, setRentPaid] = useState<number | ''>('');
@@ -42,6 +45,11 @@ const HRACalculator = () => {
       exemptedHRA: parseFloat(exemptedAmount.toFixed(2)),
       taxableHRA: parseFloat(taxableHRA.toFixed(2))
     });
+    
+    // Call the onCalculate callback if provided
+    if (onCalculate) {
+      onCalculate(Number(basicSalary), Number(hraReceived), Number(rentPaid), metroCity);
+    }
   };
 
   return (

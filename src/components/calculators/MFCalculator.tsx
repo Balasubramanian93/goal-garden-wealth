@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +5,11 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Toggle } from "@/components/ui/toggle";
 
-const MFCalculator = () => {
+interface MFCalculatorProps {
+  onCalculate?: (investmentAmount: number, expectedReturn: number, years: number, investmentType: string) => void;
+}
+
+const MFCalculator = ({ onCalculate }: MFCalculatorProps = {}) => {
   const [investmentType, setInvestmentType] = useState<"lumpsum" | "sip">("lumpsum");
   const [amount, setAmount] = useState<number | ''>('');
   const [expectedReturn, setExpectedReturn] = useState<number | ''>('');
@@ -33,6 +36,11 @@ const MFCalculator = () => {
         estimatedReturns: parseFloat(estimatedReturns.toFixed(2)),
         totalValue: parseFloat(totalValue.toFixed(2))
       });
+      
+      // Call the onCalculate callback if provided
+      if (onCalculate) {
+        onCalculate(P, Number(expectedReturn), t, investmentType);
+      }
     } else {
       // SIP calculation
       const P = Number(amount);
@@ -48,6 +56,11 @@ const MFCalculator = () => {
         estimatedReturns: parseFloat(estimatedReturns.toFixed(2)),
         totalValue: parseFloat(totalValue.toFixed(2))
       });
+      
+      // Call the onCalculate callback if provided
+      if (onCalculate) {
+        onCalculate(P, Number(expectedReturn), Number(years), investmentType);
+      }
     }
   };
 

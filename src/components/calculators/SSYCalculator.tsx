@@ -1,11 +1,14 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const SSYCalculator = () => {
+interface SSYCalculatorProps {
+  onCalculate?: (yearlyInvestment: number, interestRate: number) => void;
+}
+
+const SSYCalculator = ({ onCalculate }: SSYCalculatorProps = {}) => {
   const [yearlyInvestment, setYearlyInvestment] = useState<number | ''>('');
   const [interestRate, setInterestRate] = useState<number | ''>(7.6); // Current SSY rate
   const [result, setResult] = useState<{ 
@@ -47,6 +50,11 @@ const SSYCalculator = () => {
       totalInterest: parseFloat(totalInterest.toFixed(2)),
       maturityAmount: parseFloat(maturityAmount.toFixed(2))
     });
+    
+    // Call the onCalculate callback if provided
+    if (onCalculate) {
+      onCalculate(yearlyAmount, Number(interestRate));
+    }
   };
 
   return (
