@@ -21,11 +21,17 @@ export function GoalSummaryCard({ title, amount, targetAmount, percentage, color
   };
 
   return (
-    <div className="space-y-2 bg-card p-5 rounded-lg shadow-sm border">
+    <div className="space-y-3 bg-card p-5 rounded-lg shadow-sm border">
       <h3 className="font-medium text-lg">{title}</h3>
-      <div className="flex justify-between text-sm">
-        <span>{percentage}% Complete</span>
-        <span>{formatCurrency(amount)} of {formatCurrency(targetAmount)}</span>
+      <div className="flex justify-between items-center">
+        <div>
+          <p className="text-2xl font-semibold">{percentage}%</p>
+          <p className="text-sm text-muted-foreground">Complete</p>
+        </div>
+        <div className="text-right">
+          <p className="font-medium">{formatCurrency(amount)}</p>
+          <p className="text-sm text-muted-foreground">of {formatCurrency(targetAmount)}</p>
+        </div>
       </div>
       <Progress value={percentage} className="h-2.5">
         <div 

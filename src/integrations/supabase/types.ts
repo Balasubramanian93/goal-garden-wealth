@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      goal_investments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          date: string
+          goal_id: number
+          id: number
+          notes: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          date: string
+          goal_id: number
+          id?: number
+          notes?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          date?: string
+          goal_id?: number
+          id?: number
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_investments_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goals: {
         Row: {
           created_at: string
@@ -137,7 +172,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_progress: {
+        Args: { row_id: number; amount_to_add: number }
+        Returns: number
+      }
+      increment_amount: {
+        Args: { row_id: number; amount_to_add: number }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

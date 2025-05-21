@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -7,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { GoalFormModal } from "@/components/goals/GoalFormModal";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   LineChart,
@@ -219,34 +219,28 @@ const GoalDetailsPage = () => {
           {/* Goal Header */}
           <GoalDetailsHeader goal={goal} />
           
-          {/* Goal Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GoalSummaryCard 
-              title="Current Goal Status"
-              amount={goal.currentAmount}
-              targetAmount={goal.targetAmount}
-              percentage={goal.progress}
-              colorClass="bg-primary"
-            />
-            
-            <GoalSummaryCard 
-              title="Projected Growth"
-              amount={projectedValue}
-              targetAmount={goal.targetAmount}
-              percentage={projectedPercentage}
-              colorClass="bg-amber-500"
-            />
-          </div>
+          {/* Goal Progress */}
+          <GoalProgressSection 
+            currentAmount={goal.currentAmount}
+            targetAmount={goal.targetAmount}
+            progress={goal.progress}
+            projectedValue={projectedValue}
+            projectedPercentage={projectedPercentage}
+            formatCurrency={formatCurrency}
+          />
           
-          {/* Investment Tracker - New component */}
-          <GoalInvestmentsTracker goalId={goal.id} onInvestmentAdded={(amount) => {
-            // Update goal current amount in local state to avoid full page refresh
-            setGoal({
-              ...goal,
-              currentAmount: goal.currentAmount + amount,
-              progress: Math.min(100, Math.round(((goal.currentAmount + amount) / goal.targetAmount) * 100))
-            });
-          }} />
+          {/* Investment Tracker */}
+          <GoalInvestmentsTracker 
+            goalId={goal.id} 
+            onInvestmentAdded={(amount) => {
+              // Update goal current amount in local state to avoid full page refresh
+              setGoal({
+                ...goal,
+                currentAmount: goal.currentAmount + amount,
+                progress: Math.min(100, Math.round(((goal.currentAmount + amount) / goal.targetAmount) * 100))
+              });
+            }} 
+          />
           
           {/* Key Metrics */}
           <GoalMetricsGrid 
