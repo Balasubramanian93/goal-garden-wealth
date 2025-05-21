@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -23,6 +22,7 @@ interface GoalsState {
   updateGoal: (id: number, goal: Partial<Goal>) => Promise<void>;
   deleteGoal: (id: number) => Promise<void>;
   getGoalById: (id: number) => Goal | undefined;
+  updateGoalCurrentAmount: (id: number, newAmount: number) => Promise<void>;
 }
 
 export const useGoalsStore = create<GoalsState>((set, get) => ({
@@ -194,5 +194,48 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
 
   getGoalById: (id) => {
     return get().goals.find(goal => goal.id === id);
+  },
+
+  updateGoalCurrentAmount: async (id, newAmount) => {
+    try {
+      const goals = get().goals;
+      const existingGoal = goals.find(goal => goal.id === id);
+      
+      if (!existingGoal) {
+        throw new Error(`Goal with id ${id} not found`);
+      }
+
+      const updatedAmount = existingGoal.currentAmount + newAmount;
+      const progress = Math.round((updatedAmount / existingGoal.targetAmount) * 100);
+
+      // Update in database
+      const { error } = await supabase
+        .from('goals')
+        .update({
+          current_amount: updatedAmount,
+          progress,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Update local state
+      set(state => ({
+        goals: state.goals.map(goal => {
+          if (goal.id === id) {
+            return {
+              ...goal,
+              currentAmount: updatedAmount,
+              progress,
+            };
+          }
+          return goal;
+        })
+      }));
+    } catch (error: any) {
+      console.error("Error updating goal amount:", error.message);
+      toast.error("Failed to update goal amount");
+    }
   }
 }));

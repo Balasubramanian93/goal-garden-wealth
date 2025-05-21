@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { useGoalsStore } from "@/store/goalsStore";
-import { Loader2, Calendar, Flag, Target, Home, Briefcase, Edit, ArrowLeft } from "lucide-react";
+import { Loader2, Calendar, Flag, Target, Home, Briefcase, ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/lib/supabase";
@@ -20,6 +19,12 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
+import { GoalInvestmentsTracker } from "@/components/goals/GoalInvestmentsTracker";
+import { GoalSummaryCard } from "@/components/goals/GoalSummaryCard";
+import { GoalDetailsHeader } from "@/components/goals/GoalDetailsHeader";
+import { GoalProgressSection } from "@/components/goals/GoalProgressSection";
+import { GoalMetricsGrid } from "@/components/goals/GoalMetricsGrid";
+import { GoalRecommendations } from "@/components/goals/GoalRecommendations";
 
 const GoalDetailsPage = () => {
   const { goalId } = useParams();
@@ -61,59 +66,6 @@ const GoalDetailsPage = () => {
     
     checkAuth();
   }, [goalId, navigate, getGoalById]);
-
-  const renderIcon = () => {
-    if (!goal) return null;
-    
-    switch (goal.iconType) {
-      case 'Calendar':
-        return <Calendar className="h-16 w-16 text-blue-500" />;
-      case 'Flag':
-        return <Flag className="h-16 w-16 text-green-500" />;
-      case 'Target':
-        return <Target className="h-16 w-16 text-purple-500" />;
-      case 'Home':
-        return <Home className="h-16 w-16 text-orange-500" />;
-      case 'Briefcase':
-        return <Briefcase className="h-16 w-16 text-teal-500" />;
-      default:
-        return <Target className="h-16 w-16 text-gray-500" />;
-    }
-  };
-
-  const calculateMonthsRemaining = () => {
-    if (!goal) return 0;
-    const currentYear = new Date().getFullYear();
-    const targetYear = parseInt(goal.targetDate);
-    return (targetYear - currentYear) * 12;
-  };
-
-  const formatCurrency = (amount: number) => {
-    if (amount >= 10000000) {
-      return `₹${(amount / 10000000).toFixed(2)} Cr`;
-    } else if (amount >= 100000) {
-      return `₹${(amount / 100000).toFixed(1)} L`;
-    } else {
-      return `₹${amount.toLocaleString()}`;
-    }
-  };
-
-  const calculateFutureValue = () => {
-    if (!goal) return 0;
-    
-    const months = calculateMonthsRemaining();
-    const rate = goal.expectedReturn / 100 / 12;
-    const present = goal.currentAmount;
-    const pmt = goal.monthlyContribution;
-
-    // Calculate future value of existing investments
-    const futureValueExisting = present * Math.pow(1 + rate, months);
-    
-    // Calculate future value of monthly investments
-    const futureValueMonthly = pmt * ((Math.pow(1 + rate, months) - 1) / rate);
-    
-    return futureValueExisting + futureValueMonthly;
-  };
 
   const handleEdit = () => {
     navigate(`/goals/edit/${goalId}`);
@@ -218,6 +170,40 @@ const GoalDetailsPage = () => {
   const shortfall = Math.max(0, goal.targetAmount - projectedValue);
   const comparisonData = generateComparisonData();
 
+  function calculateFutureValue() {
+    if (!goal) return 0;
+    
+    const months = calculateMonthsRemaining();
+    const rate = goal.expectedReturn / 100 / 12;
+    const present = goal.currentAmount;
+    const pmt = goal.monthlyContribution;
+
+    // Calculate future value of existing investments
+    const futureValueExisting = present * Math.pow(1 + rate, months);
+    
+    // Calculate future value of monthly investments
+    const futureValueMonthly = pmt * ((Math.pow(1 + rate, months) - 1) / rate);
+    
+    return futureValueExisting + futureValueMonthly;
+  }
+
+  function calculateMonthsRemaining() {
+    if (!goal) return 0;
+    const currentYear = new Date().getFullYear();
+    const targetYear = parseInt(goal.targetDate);
+    return (targetYear - currentYear) * 12;
+  }
+
+  function formatCurrency(amount: number) {
+    if (amount >= 10000000) {
+      return `₹${(amount / 10000000).toFixed(2)} Cr`;
+    } else if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(1)} L`;
+    } else {
+      return `₹${amount.toLocaleString()}`;
+    }
+  }
+
   return (
     <MainLayout>
       <div className="container max-w-5xl py-8">
@@ -231,66 +217,48 @@ const GoalDetailsPage = () => {
         
         <div className="space-y-8">
           {/* Goal Header */}
-          <div className="flex items-center gap-6 bg-muted/30 p-6 rounded-lg">
-            <div className="p-5 bg-background rounded-full">
-              {renderIcon()}
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">{goal.name}</h1>
-              <p className="text-muted-foreground text-lg mt-1">Target: {formatCurrency(goal.targetAmount)} by {goal.targetDate}</p>
-            </div>
+          <GoalDetailsHeader goal={goal} />
+          
+          {/* Goal Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <GoalSummaryCard 
+              title="Current Goal Status"
+              amount={goal.currentAmount}
+              targetAmount={goal.targetAmount}
+              percentage={goal.progress}
+              colorClass="bg-primary"
+            />
+            
+            <GoalSummaryCard 
+              title="Projected Growth"
+              amount={projectedValue}
+              targetAmount={goal.targetAmount}
+              percentage={projectedPercentage}
+              colorClass="bg-amber-500"
+            />
           </div>
           
-          {/* Progress Bars Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Current Progress */}
-            <div className="space-y-2 bg-card p-4 rounded-lg">
-              <h3 className="font-medium">Current Progress</h3>
-              <div className="flex justify-between text-sm">
-                <span>{goal.progress}% Complete</span>
-                <span>{formatCurrency(goal.currentAmount)} of {formatCurrency(goal.targetAmount)}</span>
-              </div>
-              <Progress value={goal.progress} className="h-2" />
-            </div>
-            
-            {/* Projected Progress */}
-            <div className="space-y-2 bg-card p-4 rounded-lg">
-              <h3 className="font-medium">Projected Progress</h3>
-              <div className="flex justify-between text-sm">
-                <span>{projectedPercentage}% Projected</span>
-                <span>{formatCurrency(projectedValue)} of {formatCurrency(goal.targetAmount)}</span>
-              </div>
-              <Progress value={projectedPercentage} className="h-2 bg-gray-200">
-                <div 
-                  className="h-full bg-amber-500" 
-                  style={{ width: `${projectedPercentage}%` }}
-                ></div>
-              </Progress>
-            </div>
-          </div>
+          {/* Investment Tracker - New component */}
+          <GoalInvestmentsTracker goalId={goal.id} onInvestmentAdded={(amount) => {
+            // Update goal current amount in local state to avoid full page refresh
+            setGoal({
+              ...goal,
+              currentAmount: goal.currentAmount + amount,
+              progress: Math.min(100, Math.round(((goal.currentAmount + amount) / goal.targetAmount) * 100))
+            });
+          }} />
           
           {/* Key Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-lg bg-card">
-              <p className="text-sm text-muted-foreground">Monthly Contribution</p>
-              <p className="font-medium">{formatCurrency(goal.monthlyContribution)}</p>
-            </div>
-            <div className="p-4 rounded-lg bg-card">
-              <p className="text-sm text-muted-foreground">Expected Return</p>
-              <p className="font-medium">{goal.expectedReturn}% p.a.</p>
-            </div>
-            <div className="p-4 rounded-lg bg-card">
-              <p className="text-sm text-muted-foreground">Time Remaining</p>
-              <p className="font-medium">{parseInt(goal.targetDate) - new Date().getFullYear()} years</p>
-            </div>
-            <div className="p-4 rounded-lg bg-card">
-              <p className="text-sm text-muted-foreground">Projected Shortfall</p>
-              <p className="font-medium">{shortfall > 0 ? formatCurrency(shortfall) : "On Track!"}</p>
-            </div>
-          </div>
+          <GoalMetricsGrid 
+            monthlyContribution={goal.monthlyContribution}
+            expectedReturn={goal.expectedReturn}
+            timeRemaining={parseInt(goal.targetDate) - new Date().getFullYear()}
+            shortfall={shortfall}
+            formatCurrency={formatCurrency}
+          />
           
           {/* Comparison Chart */}
-          <div className="border rounded-lg p-6">
+          <div className="border rounded-lg p-6 bg-card shadow-sm">
             <h3 className="font-medium text-lg mb-4">Growth Comparison</h3>
             <div className="h-[350px] w-full">
               <ChartContainer
@@ -363,14 +331,11 @@ const GoalDetailsPage = () => {
           
           {/* Recommendations */}
           {shortfall > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h3 className="font-medium mb-2">Recommendations</h3>
-              <ul className="list-disc list-inside space-y-1">
-                <li>Increase monthly contribution by {formatCurrency(Math.ceil(shortfall / calculateMonthsRemaining()))} to reach your goal on time</li>
-                <li>Consider increasing your allocation to higher-return assets</li>
-                <li>Review and optimize your investment strategy quarterly</li>
-              </ul>
-            </div>
+            <GoalRecommendations 
+              shortfall={shortfall}
+              monthlyIncrease={Math.ceil(shortfall / calculateMonthsRemaining())}
+              formatCurrency={formatCurrency}
+            />
           )}
           
           {/* Action Buttons */}
