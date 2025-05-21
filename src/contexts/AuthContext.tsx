@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -110,7 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Signed out",
         description: "You've been signed out successfully.",
       });
-      // Redirect to home page after logout
+      // Redirect to home page after logout instead of login
       navigate("/");
     } catch (error: any) {
       toast({

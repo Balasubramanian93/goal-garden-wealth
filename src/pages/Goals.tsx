@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { 
   Calendar, 
   Target, 
@@ -20,9 +19,8 @@ import {
 import { GoalFormModal } from "@/components/goals/GoalFormModal";
 import { GoalDetails } from "@/components/goals/GoalDetails";
 import { useGoalsStore } from "@/store/goalsStore";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
 const Goals = () => {
   const [showAddGoalModal, setShowAddGoalModal] = useState(false);
@@ -80,7 +78,7 @@ const Goals = () => {
 
   const handleEditClick = (e: React.MouseEvent, goalId: number) => {
     e.stopPropagation();
-    setSelectedGoalId(goalId);
+    navigate(`/goals/edit/${goalId}`);
   };
 
   // If still checking authentication, show a loading state
