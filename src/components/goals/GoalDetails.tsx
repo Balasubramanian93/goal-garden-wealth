@@ -13,6 +13,17 @@ import { Goal, useGoalsStore } from "@/store/goalsStore";
 import { Calendar, Flag, Target, Home, Briefcase, Edit, Trash2 } from "lucide-react";
 import { GoalFormModal } from "./GoalFormModal";
 import { toast } from "sonner";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 interface GoalDetailsProps {
   goalId: number;
@@ -90,10 +101,65 @@ export function GoalDetails({ goalId, open, onOpenChange }: GoalDetailsProps) {
     }
   };
 
+  // Generate comparison chart data
+  const generateComparisonData = () => {
+    const data = [];
+    const currentYear = new Date().getFullYear();
+    const targetYear = parseInt(goal.targetDate);
+    const years = targetYear - currentYear;
+    
+    // Get monthly rate from annual rate
+    const monthlyRate = goal.expectedReturn / 100 / 12;
+    
+    // Calculate the actual years we've been investing (estimate)
+    const totalYears = years + Math.ceil(goal.progress / (100 / years));
+    const pastYears = Math.min(totalYears - years, years);
+    
+    // Generate data points for each year
+    for (let i = -pastYears; i <= years; i++) {
+      const yearLabel = currentYear + i;
+      const monthsPassed = (i + pastYears) * 12;
+      
+      let expectedAmount = 0;
+      
+      if (i >= 0) {
+        // Future projection based on current amount and monthly contributions
+        const futureMonths = i * 12;
+        // Current amount grows with interest
+        const growthOnCurrent = goal.currentAmount * Math.pow(1 + monthlyRate, futureMonths);
+        // New contributions grow with interest
+        const growthOnContributions = goal.monthlyContribution * ((Math.pow(1 + monthlyRate, futureMonths) - 1) / monthlyRate);
+        expectedAmount = growthOnCurrent + growthOnContributions;
+      } else {
+        // Past projection (what should have been achieved so far)
+        const pastMonths = -i * 12;
+        const totalMonths = years * 12;
+        const targetMonthlyGrowth = goal.targetAmount / (goal.monthlyContribution * ((Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate));
+        
+        expectedAmount = goal.monthlyContribution * ((Math.pow(1 + targetMonthlyGrowth, totalMonths - pastMonths) - 1) / targetMonthlyGrowth);
+      }
+
+      // If this is current year, use actual current amount
+      const actualAmount = i === 0 ? goal.currentAmount : 
+                          i < 0 ? goal.currentAmount * (1 - (Math.abs(i) / pastYears) * (goal.progress / 100)) : 
+                          null;
+      
+      data.push({
+        year: yearLabel.toString(),
+        expected: Math.round(expectedAmount),
+        actual: actualAmount !== null ? Math.round(actualAmount) : null
+      });
+    }
+    
+    return data;
+  };
+
+  const comparisonData = generateComparisonData();
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Goal Details</DialogTitle>
           </DialogHeader>
@@ -129,6 +195,78 @@ export function GoalDetails({ goalId, open, onOpenChange }: GoalDetailsProps) {
                   style={{ width: `${projectedPercentage}%` }}
                 ></div>
               </Progress>
+            </div>
+            
+            {/* Comparison Chart */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-medium mb-4">Growth Comparison</h3>
+              <div className="h-[300px] w-full">
+                <ChartContainer
+                  className="h-full"
+                  config={{
+                    expected: {
+                      label: "Expected Growth",
+                      theme: {
+                        light: "hsl(var(--primary))",
+                        dark: "hsl(var(--primary))",
+                      },
+                    },
+                    actual: {
+                      label: "Actual Progress",
+                      theme: {
+                        light: "#10b981",
+                        dark: "#10b981",
+                      },
+                    },
+                  }}
+                >
+                  <LineChart 
+                    data={comparisonData} 
+                    margin={{ top: 5, right: 30, bottom: 5, left: 10 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="year" />
+                    <YAxis tickFormatter={(value) => `₹${(value / 100000).toFixed(1)}L`} />
+                    <ChartTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <ChartTooltipContent 
+                              active={active} 
+                              payload={payload} 
+                              formatter={(value) => [
+                                `₹${Number(value).toLocaleString()}`,
+                                payload[0].dataKey === "expected" ? "Expected" : "Actual"
+                              ]} 
+                            />
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="expected"
+                      name="expected"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="actual"
+                      name="actual"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                    />
+                  </LineChart>
+                </ChartContainer>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Compare your actual progress with the expected growth trajectory
+                </p>
+              </div>
             </div>
             
             {/* Key Metrics */}
