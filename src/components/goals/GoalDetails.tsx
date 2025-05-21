@@ -168,12 +168,12 @@ export function GoalDetails({ goalId, open, onOpenChange }: GoalDetailsProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[700px] mx-auto max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[70vw] h-[70vh] max-w-5xl mx-auto overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Goal Details</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6">
+          <div className="flex-1 overflow-y-auto pr-2 space-y-6">
             {/* Goal Header */}
             <div className="flex items-center gap-4">
               {renderIcon()}
@@ -183,33 +183,58 @@ export function GoalDetails({ goalId, open, onOpenChange }: GoalDetailsProps) {
               </div>
             </div>
             
-            {/* Current Progress */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Current Progress: {goal.progress}%</span>
-                <span>{formatCurrency(goal.currentAmount)} of {formatCurrency(goal.targetAmount)}</span>
+            {/* Progress Bars Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Current Progress */}
+              <div className="space-y-2">
+                <h3 className="font-medium">Current Progress</h3>
+                <div className="flex justify-between text-sm">
+                  <span>{goal.progress}% Complete</span>
+                  <span>{formatCurrency(goal.currentAmount)} of {formatCurrency(goal.targetAmount)}</span>
+                </div>
+                <Progress value={goal.progress} className="h-2" />
               </div>
-              <Progress value={goal.progress} className="h-2" />
+              
+              {/* Projected Progress */}
+              <div className="space-y-2">
+                <h3 className="font-medium">Projected Progress</h3>
+                <div className="flex justify-between text-sm">
+                  <span>{projectedPercentage}% Projected</span>
+                  <span>{formatCurrency(projectedValue)} of {formatCurrency(goal.targetAmount)}</span>
+                </div>
+                <Progress value={projectedPercentage} className="h-2 bg-gray-200">
+                  <div 
+                    className="h-full bg-amber-500" 
+                    style={{ width: `${projectedPercentage}%` }}
+                  ></div>
+                </Progress>
+              </div>
             </div>
             
-            {/* Projected Progress */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Projected Progress: {projectedPercentage}%</span>
-                <span>{formatCurrency(projectedValue)} of {formatCurrency(goal.targetAmount)}</span>
+            {/* Key Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 rounded-lg bg-muted/30">
+                <p className="text-sm text-muted-foreground">Monthly Contribution</p>
+                <p className="font-medium">{formatCurrency(goal.monthlyContribution)}</p>
               </div>
-              <Progress value={projectedPercentage} className="h-2 bg-gray-200">
-                <div 
-                  className="h-full bg-amber-500" 
-                  style={{ width: `${projectedPercentage}%` }}
-                ></div>
-              </Progress>
+              <div className="p-4 rounded-lg bg-muted/30">
+                <p className="text-sm text-muted-foreground">Expected Return</p>
+                <p className="font-medium">{goal.expectedReturn}% p.a.</p>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/30">
+                <p className="text-sm text-muted-foreground">Time Remaining</p>
+                <p className="font-medium">{parseInt(goal.targetDate) - new Date().getFullYear()} years</p>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/30">
+                <p className="text-sm text-muted-foreground">Projected Shortfall</p>
+                <p className="font-medium">{shortfall > 0 ? formatCurrency(shortfall) : "On Track!"}</p>
+              </div>
             </div>
             
             {/* Comparison Chart */}
             <div className="border rounded-lg p-4">
               <h3 className="font-medium mb-4">Growth Comparison</h3>
-              <div className="h-[300px] w-full">
+              <div className="h-[250px] w-full">
                 <ChartContainer
                   className="h-full"
                   config={{
@@ -278,26 +303,6 @@ export function GoalDetails({ goalId, open, onOpenChange }: GoalDetailsProps) {
               </div>
             </div>
             
-            {/* Key Metrics */}
-            <div className="grid grid-cols-2 gap-4 border rounded-lg p-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Monthly Contribution</p>
-                <p className="font-medium">{formatCurrency(goal.monthlyContribution)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Expected Return</p>
-                <p className="font-medium">{goal.expectedReturn}% p.a.</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Time Remaining</p>
-                <p className="font-medium">{parseInt(goal.targetDate) - new Date().getFullYear()} years</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Projected Shortfall</p>
-                <p className="font-medium">{shortfall > 0 ? formatCurrency(shortfall) : "On Track!"}</p>
-              </div>
-            </div>
-            
             {/* Recommendations */}
             {shortfall > 0 && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -311,7 +316,7 @@ export function GoalDetails({ goalId, open, onOpenChange }: GoalDetailsProps) {
             )}
           </div>
           
-          <DialogFooter className="gap-2 sm:justify-between sm:gap-0">
+          <DialogFooter className="pt-4 border-t mt-auto gap-2 sm:justify-between sm:gap-0">
             <Button 
               variant="destructive" 
               type="button" 
