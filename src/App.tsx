@@ -16,6 +16,7 @@ import Register from "./pages/Register";
 import Demo from "./pages/Demo";
 import Tools from "./pages/Tools";
 import EditGoalPage from "./pages/EditGoalPage";
+import GoalDetailsPage from "./pages/GoalDetailsPage";
 import FDCalculatorPage from "./pages/calculators/FDCalculatorPage";
 import CAGRCalculatorPage from "./pages/calculators/CAGRCalculatorPage";
 import RDCalculatorPage from "./pages/calculators/RDCalculatorPage";
@@ -70,6 +71,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Goals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/goals/details/:goalId" 
+              element={
+                <ProtectedRoute>
+                  <GoalDetailsPage />
                 </ProtectedRoute>
               } 
             />

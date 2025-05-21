@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -17,14 +18,12 @@ import {
   Loader2
 } from "lucide-react";
 import { GoalFormModal } from "@/components/goals/GoalFormModal";
-import { GoalDetails } from "@/components/goals/GoalDetails";
 import { useGoalsStore } from "@/store/goalsStore";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const Goals = () => {
   const [showAddGoalModal, setShowAddGoalModal] = useState(false);
-  const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const { goals, loading, fetchGoals } = useGoalsStore();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const navigate = useNavigate();
@@ -79,6 +78,10 @@ const Goals = () => {
   const handleEditClick = (e: React.MouseEvent, goalId: number) => {
     e.stopPropagation();
     navigate(`/goals/edit/${goalId}`);
+  };
+  
+  const handleViewDetails = (goalId: number) => {
+    navigate(`/goals/details/${goalId}`);
   };
 
   // If still checking authentication, show a loading state
@@ -197,7 +200,7 @@ const Goals = () => {
                 <Card 
                   key={goal.id} 
                   className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                  onClick={() => setSelectedGoalId(goal.id)}
+                  onClick={() => handleViewDetails(goal.id)}
                 >
                   <div className="absolute top-0 h-1 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
                     <div 
@@ -262,7 +265,7 @@ const Goals = () => {
                         <Button 
                           variant="outline" 
                           className="w-full hover:bg-muted/50 transition-colors"
-                          onClick={() => setSelectedGoalId(goal.id)}
+                          onClick={() => handleViewDetails(goal.id)}
                         >
                           View Details
                         </Button>
@@ -278,15 +281,6 @@ const Goals = () => {
 
       {/* Add Goal Modal */}
       <GoalFormModal open={showAddGoalModal} onOpenChange={setShowAddGoalModal} />
-      
-      {/* Goal Details Modal */}
-      {selectedGoalId !== null && (
-        <GoalDetails 
-          goalId={selectedGoalId} 
-          open={selectedGoalId !== null} 
-          onOpenChange={(open) => !open && setSelectedGoalId(null)} 
-        />
-      )}
     </MainLayout>
   );
 };
