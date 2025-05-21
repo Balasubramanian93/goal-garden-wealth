@@ -111,19 +111,39 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
         throw error;
       }
 
-      // Update goal current amount
-      const { error: updateError } = await supabase
-        .from('goals')
-        .update({ 
-          current_amount: supabase.rpc('increment_amount', { row_id: goalId, amount_to_add: data.amount }),
-          progress: supabase.rpc('calculate_progress', { row_id: goalId, amount_to_add: data.amount })
-        })
-        .eq('id', goalId);
+      // Update goal current amount - FIX: directly calling the RPC function
+      const amountToAdd = Number(data.amount);
+      const { data: incrementResult, error: updateError } = await supabase
+        .rpc('increment_amount', {
+          row_id: goalId,
+          amount_to_add: amountToAdd
+        });
 
       if (updateError) {
         throw updateError;
       }
 
+      // Calculate progress - FIX: directly calling the RPC function
+      const { data: progressResult, error: progressError } = await supabase
+        .rpc('calculate_progress', {
+          row_id: goalId,
+          amount_to_add: amountToAdd
+        });
+
+      if (progressError) {
+        throw progressError;
+      }
+
+      // Update goal progress
+      const { error: goalUpdateError } = await supabase
+        .from('goals')
+        .update({ progress: progressResult })
+        .eq('id', goalId);
+
+      if (goalUpdateError) {
+        throw goalUpdateError;
+      }
+      
       // Update local state
       if (investmentData) {
         setInvestments([investmentData[0], ...investments]);
@@ -165,18 +185,37 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
         throw error;
       }
 
-      // Update goal current amount (subtract the deleted investment amount)
-      const negativeAmount = -investmentToDelete.amount;
-      const { error: updateError } = await supabase
-        .from('goals')
-        .update({ 
-          current_amount: supabase.rpc('increment_amount', { row_id: goalId, amount_to_add: negativeAmount }),
-          progress: supabase.rpc('calculate_progress', { row_id: goalId, amount_to_add: negativeAmount })
-        })
-        .eq('id', goalId);
+      // Update goal current amount - FIX: directly calling the RPC function
+      const negativeAmount = -Number(investmentToDelete.amount);
+      const { data: decrementResult, error: updateError } = await supabase
+        .rpc('increment_amount', {
+          row_id: goalId,
+          amount_to_add: negativeAmount
+        });
 
       if (updateError) {
         throw updateError;
+      }
+
+      // Calculate progress - FIX: directly calling the RPC function
+      const { data: progressResult, error: progressError } = await supabase
+        .rpc('calculate_progress', {
+          row_id: goalId,
+          amount_to_add: negativeAmount
+        });
+
+      if (progressError) {
+        throw progressError;
+      }
+
+      // Update goal progress
+      const { error: goalUpdateError } = await supabase
+        .from('goals')
+        .update({ progress: progressResult })
+        .eq('id', goalId);
+
+      if (goalUpdateError) {
+        throw goalUpdateError;
       }
 
       // Update local state
@@ -285,7 +324,7 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
 
       {/* Add Investment Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-md fixed left-[50%] top-[50%] z-50 grid w-full translate-x-[-50%] translate-y-[-50%]">
+        <DialogContent className="sm:max-w-md fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%]">
           <DialogHeader>
             <DialogTitle>Add New Investment</DialogTitle>
             <DialogDescription>

@@ -1,5 +1,6 @@
+
 import { create } from 'zustand';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 export interface Goal {
