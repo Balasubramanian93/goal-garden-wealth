@@ -76,7 +76,10 @@ const CalculatorDetailLayout = ({
                     },
                   }}
                 >
-                  <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: 10 }}>
+                  <LineChart 
+                    data={chartData} 
+                    margin={{ top: 5, right: 30, bottom: 5, left: 10 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis tickFormatter={(value) => `₹${value.toLocaleString()}`} />
