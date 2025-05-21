@@ -6,8 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Calendar, Loader2 } from "lucide-react";
+import { Plus, Calendar, Loader2, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabase";
 import {
   Table,
@@ -35,7 +45,10 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingInvestment, setIsAddingInvestment] = useState(false);
+  const [isDeletingInvestment, setIsDeletingInvestment] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [investmentToDelete, setInvestmentToDelete] = useState<Investment | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<{
     amount: number;
@@ -130,6 +143,59 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
     }
   };
 
+  // Delete investment
+  const handleDeleteInvestment = (investment: Investment) => {
+    setInvestmentToDelete(investment);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteInvestment = async () => {
+    if (!investmentToDelete) return;
+    
+    try {
+      setIsDeletingInvestment(true);
+      
+      // Delete investment from database
+      const { error } = await supabase
+        .from('goal_investments')
+        .delete()
+        .eq('id', investmentToDelete.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update goal current amount (subtract the deleted investment amount)
+      const negativeAmount = -investmentToDelete.amount;
+      const { error: updateError } = await supabase
+        .from('goals')
+        .update({ 
+          current_amount: supabase.rpc('increment_amount', { row_id: goalId, amount_to_add: negativeAmount }),
+          progress: supabase.rpc('calculate_progress', { row_id: goalId, amount_to_add: negativeAmount })
+        })
+        .eq('id', goalId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      // Update local state
+      setInvestments(investments.filter(inv => inv.id !== investmentToDelete.id));
+      
+      // Notify parent component about the removed amount
+      onInvestmentAdded(negativeAmount);
+
+      toast.success('Investment deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting investment:', error);
+      toast.error(error.message || 'Failed to delete investment');
+    } finally {
+      setIsDeletingInvestment(false);
+      setShowDeleteDialog(false);
+      setInvestmentToDelete(null);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-IN', {
@@ -169,6 +235,7 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
                   <TableHead>Date</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead className="hidden md:table-cell">Notes</TableHead>
+                  <TableHead className="w-[60px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -182,6 +249,17 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
                     </TableCell>
                     <TableCell className="font-medium text-primary">{formatCurrency(investment.amount)}</TableCell>
                     <TableCell className="text-muted-foreground hidden md:table-cell">{investment.notes || '-'}</TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteInvestment(investment)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -283,6 +361,36 @@ export function GoalInvestmentsTracker({ goalId, onInvestmentAdded }: GoalInvest
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Investment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this investment of {investmentToDelete && formatCurrency(investmentToDelete.amount)}?
+              This action will also reduce the current amount of your goal.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingInvestment}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteInvestment} 
+              disabled={isDeletingInvestment}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingInvestment ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
