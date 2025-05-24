@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { receiptService, type Receipt } from './receiptService';
 
@@ -209,8 +210,41 @@ export const budgetService = {
     return data;
   },
 
-  // Delete an expense
+  // Delete an expense and associated receipt data
   async deleteExpense(expenseId: string): Promise<void> {
+    // First, get the expense to check if it has a receipt
+    const { data: expense, error: fetchError } = await supabase
+      .from('expenses')
+      .select('receipt_id')
+      .eq('id', expenseId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // If there's a receipt associated, delete the receipt file from storage
+    if (expense.receipt_id) {
+      // Get receipt file path
+      const { data: receipt } = await supabase
+        .from('receipts')
+        .select('file_path')
+        .eq('id', expense.receipt_id)
+        .single();
+
+      if (receipt?.file_path) {
+        // Delete file from storage
+        await supabase.storage
+          .from('receipts')
+          .remove([receipt.file_path]);
+      }
+
+      // Delete receipt record (this will cascade delete receipt_items and category_spending due to foreign keys)
+      await supabase
+        .from('receipts')
+        .delete()
+        .eq('id', expense.receipt_id);
+    }
+
+    // Delete the expense
     const { error } = await supabase
       .from('expenses')
       .delete()
@@ -230,12 +264,10 @@ export const budgetService = {
     return data || [];
   },
 
-  // Get or create current budget period
   async getCurrentBudgetPeriod(monthYear: string, periodName: string): Promise<BudgetPeriod> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Try to get existing period
     const { data: existing, error: fetchError } = await supabase
       .from('budget_periods')
       .select('*')
@@ -249,14 +281,13 @@ export const budgetService = {
       return existing;
     }
 
-    // Create new period if it doesn't exist
     const { data, error } = await supabase
       .from('budget_periods')
       .insert({
         user_id: user.id,
         period: monthYear,
         period_name: periodName,
-        total_income: 3500, // Default income
+        total_income: 3500,
         total_expenses: 0,
         remaining_budget: 3500,
       })
@@ -267,7 +298,6 @@ export const budgetService = {
     return data;
   },
 
-  // Update budget period totals
   async updateBudgetPeriodTotals(periodId: string): Promise<void> {
     const { error } = await supabase.rpc('update_budget_period_totals', {
       period_id: periodId
@@ -276,7 +306,6 @@ export const budgetService = {
     if (error) throw error;
   },
 
-  // Update budget period income
   async updateBudgetIncome(periodId: string, income: number): Promise<void> {
     const { error } = await supabase
       .from('budget_periods')

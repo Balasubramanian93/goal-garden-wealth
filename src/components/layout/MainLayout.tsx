@@ -5,51 +5,25 @@ import {
   ChartPie,
   User,
   LogIn,
-  Target,
-  BarChart2,
   LogOut,
-  Calculator,
-  Newspaper,
   Moon,
-  Sun, 
-  Home, 
-  Wallet,
-  TrendingUp,
-  Menu,
-  X,
-  ChevronDown
+  Sun
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Toggle } from "@/components/ui/toggle";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarTrigger,
-} from "@/components/ui/menubar";
+import ResponsiveNavigation from "./ResponsiveNavigation";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isAuthenticated = !!user;
   
   // Get display name from user metadata if available
   const displayName = user?.user_metadata?.first_name 
     ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`
     : user?.email?.split('@')[0];
-
-  const isActive = (path: string) => {
-    if (path === "/" && location.pathname === "/") return true;
-    if (path !== "/" && location.pathname.startsWith(path)) return true;
-    return false;
-  };
 
   const getCurrentPageTitle = () => {
     const currentPath = location.pathname;
@@ -78,110 +52,8 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             <span className="hidden sm:inline-block">WealthWise</span>
           </Link>
           
-          {/* Desktop Navigation - Grouped Menubar */}
-          <div className="hidden md:flex items-center">
-            <Menubar className="border-none bg-transparent">
-              {/* Home - Always visible */}
-              <MenubarMenu>
-                <MenubarTrigger asChild>
-                  <Link
-                    to="/"
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer",
-                      isActive("/")
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                    )}
-                  >
-                    <Home className="h-4 w-4" />
-                    Home
-                  </Link>
-                </MenubarTrigger>
-              </MenubarMenu>
-
-              {isAuthenticated ? (
-                <>
-                  {/* Financial Management */}
-                  <MenubarMenu>
-                    <MenubarTrigger className="flex items-center gap-1 px-3 py-2 text-sm font-medium">
-                      <Wallet className="h-4 w-4" />
-                      Finance
-                      <ChevronDown className="h-3 w-3" />
-                    </MenubarTrigger>
-                    <MenubarContent>
-                      <MenubarItem asChild>
-                        <Link to="/budget" className="flex items-center gap-2 w-full">
-                          <Wallet className="h-4 w-4" />
-                          Budget
-                        </Link>
-                      </MenubarItem>
-                      <MenubarItem asChild>
-                        <Link to="/portfolio" className="flex items-center gap-2 w-full">
-                          <TrendingUp className="h-4 w-4" />
-                          Portfolio
-                        </Link>
-                      </MenubarItem>
-                      <MenubarItem asChild>
-                        <Link to="/goals" className="flex items-center gap-2 w-full">
-                          <Target className="h-4 w-4" />
-                          Goals
-                        </Link>
-                      </MenubarItem>
-                    </MenubarContent>
-                  </MenubarMenu>
-
-                  {/* Analytics & Tools */}
-                  <MenubarMenu>
-                    <MenubarTrigger className="flex items-center gap-1 px-3 py-2 text-sm font-medium">
-                      <BarChart2 className="h-4 w-4" />
-                      Analytics
-                      <ChevronDown className="h-3 w-3" />
-                    </MenubarTrigger>
-                    <MenubarContent>
-                      <MenubarItem asChild>
-                        <Link to="/analytics" className="flex items-center gap-2 w-full">
-                          <BarChart2 className="h-4 w-4" />
-                          Dashboard
-                        </Link>
-                      </MenubarItem>
-                      <MenubarSeparator />
-                      <MenubarItem asChild>
-                        <Link to="/tools" className="flex items-center gap-2 w-full">
-                          <Calculator className="h-4 w-4" />
-                          Calculators
-                        </Link>
-                      </MenubarItem>
-                    </MenubarContent>
-                  </MenubarMenu>
-                </>
-              ) : (
-                <>
-                  {/* Public Resources */}
-                  <MenubarMenu>
-                    <MenubarTrigger className="flex items-center gap-1 px-3 py-2 text-sm font-medium">
-                      <Calculator className="h-4 w-4" />
-                      Resources
-                      <ChevronDown className="h-3 w-3" />
-                    </MenubarTrigger>
-                    <MenubarContent>
-                      <MenubarItem asChild>
-                        <Link to="/blogs" className="flex items-center gap-2 w-full">
-                          <Newspaper className="h-4 w-4" />
-                          Financial Blogs
-                        </Link>
-                      </MenubarItem>
-                      <MenubarItem asChild>
-                        <Link to="/tools" className="flex items-center gap-2 w-full">
-                          <Calculator className="h-4 w-4" />
-                          Calculators
-                        </Link>
-                      </MenubarItem>
-                    </MenubarContent>
-                  </MenubarMenu>
-                </>
-              )}
-            </Menubar>
-          </div>
+          {/* Navigation */}
+          <ResponsiveNavigation />
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
@@ -200,9 +72,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               )}
             </Toggle>
 
-            {/* Auth Section */}
+            {/* Auth Section - Desktop only */}
             {isAuthenticated ? (
-              <div className="hidden md:flex items-center gap-3">
+              <div className="hidden lg:flex items-center gap-3">
                 <div className="text-sm">
                   <span className="text-muted-foreground">Welcome back,</span>
                   <span className="font-medium ml-1">{displayName}</span>
@@ -213,7 +85,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 </Button>
               </div>
             ) : (
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden lg:flex items-center gap-2">
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/login">
                     <LogIn className="mr-2 h-4 w-4" />
@@ -228,208 +100,8 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 </Button>
               </div>
             )}
-
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t bg-background/95 backdrop-blur">
-            <nav className="container py-4 space-y-2">
-              {/* Home */}
-              <Link
-                to="/"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                  isActive("/")
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                )}
-              >
-                <Home className="h-4 w-4" />
-                Home
-              </Link>
-
-              {isAuthenticated ? (
-                <>
-                  {/* Financial Management Section */}
-                  <div className="pt-2">
-                    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Financial Management
-                    </div>
-                    <Link
-                      to="/budget"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                        isActive("/budget")
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      )}
-                    >
-                      <Wallet className="h-4 w-4" />
-                      Budget
-                    </Link>
-                    <Link
-                      to="/portfolio"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                        isActive("/portfolio")
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      )}
-                    >
-                      <TrendingUp className="h-4 w-4" />
-                      Portfolio
-                    </Link>
-                    <Link
-                      to="/goals"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                        isActive("/goals")
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      )}
-                    >
-                      <Target className="h-4 w-4" />
-                      Goals
-                    </Link>
-                  </div>
-
-                  {/* Analytics & Tools Section */}
-                  <div className="pt-2">
-                    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Analytics & Tools
-                    </div>
-                    <Link
-                      to="/analytics"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                        isActive("/analytics")
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      )}
-                    >
-                      <BarChart2 className="h-4 w-4" />
-                      Analytics
-                    </Link>
-                    <Link
-                      to="/tools"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                        isActive("/tools")
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      )}
-                    >
-                      <Calculator className="h-4 w-4" />
-                      Tools
-                    </Link>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Public Resources Section */}
-                  <div className="pt-2">
-                    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Resources
-                    </div>
-                    <Link
-                      to="/blogs"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                        isActive("/blogs")
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      )}
-                    >
-                      <Newspaper className="h-4 w-4" />
-                      Financial Blogs
-                    </Link>
-                    <Link
-                      to="/tools"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                        isActive("/tools")
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      )}
-                    >
-                      <Calculator className="h-4 w-4" />
-                      Calculators
-                    </Link>
-                  </div>
-                </>
-              )}
-              
-              {/* Mobile Auth Section */}
-              <div className="pt-4 border-t space-y-2">
-                <div className="flex items-center justify-between px-4">
-                  <span className="text-sm text-muted-foreground">Theme</span>
-                  <Toggle 
-                    pressed={theme === 'dark'}
-                    onPressedChange={toggleTheme}
-                    aria-label="Toggle theme"
-                    size="sm"
-                  >
-                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                  </Toggle>
-                </div>
-                
-                {isAuthenticated ? (
-                  <>
-                    <div className="px-4 py-2 text-sm">
-                      <span className="text-muted-foreground">Logged in as </span>
-                      <span className="font-medium">{displayName}</span>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start" 
-                      onClick={() => {
-                        signOut();
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <div className="space-y-2">
-                    <Button variant="ghost" className="w-full justify-start" asChild>
-                      <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                        <LogIn className="mr-2 h-4 w-4" />
-                        Login
-                      </Link>
-                    </Button>
-                    <Button className="w-full justify-start" asChild>
-                      <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                        <User className="mr-2 h-4 w-4" />
-                        Register
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </nav>
-          </div>
-        )}
       </header>
 
       {/* Page Title Breadcrumb */}
