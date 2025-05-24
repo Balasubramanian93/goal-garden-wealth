@@ -11,6 +11,7 @@ interface ExpensesListProps {
   displayedExpenses: Expense[];
   onShowMore: () => void;
   onUpdateExpense?: (expenseId: string, newAmount: number) => void;
+  onDeleteExpense?: (expenseId: string) => void;
 }
 
 const ExpensesList = ({ 
@@ -18,7 +19,8 @@ const ExpensesList = ({
   currentMonthExpenses, 
   displayedExpenses, 
   onShowMore,
-  onUpdateExpense 
+  onUpdateExpense,
+  onDeleteExpense
 }: ExpensesListProps) => {
   return (
     <Card>
@@ -27,9 +29,9 @@ const ExpensesList = ({
         <CardDescription>Detailed list of your expenses for {currentPeriodName}.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3 max-h-60 overflow-y-auto">
+        <div className="space-y-3 max-h-80 overflow-y-auto">
           {currentMonthExpenses.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No expenses recorded yet.</p>
+            <p className="text-muted-foreground text-center py-8">No expenses recorded yet.</p>
           ) : (
             <>
               {displayedExpenses.map((expense) => (
@@ -37,11 +39,12 @@ const ExpensesList = ({
                   key={expense.id} 
                   expense={expense} 
                   onUpdate={onUpdateExpense}
+                  onDelete={onDeleteExpense}
                 />
               ))}
               {currentMonthExpenses.length > displayedExpenses.length && (
                 <Button variant="link" className="w-full mt-4" onClick={onShowMore}>
-                  Show More
+                  Show More ({currentMonthExpenses.length - displayedExpenses.length} remaining)
                 </Button>
               )}
             </>

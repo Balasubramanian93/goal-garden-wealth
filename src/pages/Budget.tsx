@@ -335,6 +335,24 @@ const Budget = () => {
     await addExpense(expenseData);
   };
 
+  const handleDeleteExpense = async (expenseId: string) => {
+    try {
+      // This would need to be implemented in the budget service
+      console.log('Delete expense:', expenseId);
+      toast({
+        title: "Feature coming soon",
+        description: "Expense deletion will be available in a future update.",
+      });
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete expense. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!user) {
     return (
       <MainLayout>
@@ -374,6 +392,7 @@ const Budget = () => {
             displayedExpenses={displayedExpenses}
             onShowMore={handleShowMoreExpenses}
             onUpdateExpense={handleUpdateExpense}
+            onDeleteExpense={handleDeleteExpense}
           />
 
           {/* Log New Expense */}
