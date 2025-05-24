@@ -82,18 +82,21 @@ const Budget = () => {
     setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
   };
 
-  // Enhanced OCR function with detailed item processing
+  // Enhanced OCR function with improved text processing
   const extractReceiptData = async (file: File): Promise<{ shop: string; amount: number; date: string; category: string; ocrText?: string }> => {
     try {
-      console.log('Starting detailed OCR processing for:', file.name);
+      console.log('Starting enhanced OCR processing for:', file.name);
       
       const { data: { text } } = await Tesseract.recognize(file, 'eng', {
-        logger: m => console.log(m)
+        logger: m => console.log(m),
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,-$/():',
+        tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK
       });
       
-      console.log('OCR extracted text:', text);
-      
+      console.log('Raw OCR text:', text);
       const parsedData = parseReceiptText(text);
+      console.log('Parsed receipt data:', parsedData);
+      
       return { ...parsedData, ocrText: text };
     } catch (error) {
       console.error('OCR Error:', error);
@@ -101,7 +104,7 @@ const Budget = () => {
     }
   };
 
-  // Improved parsing to find final total after tax
+  // Enhanced parsing with better total detection and validation
   const parseReceiptText = (text: string) => {
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
@@ -110,78 +113,91 @@ const Budget = () => {
     let date = new Date().toISOString().split('T')[0];
     let category = 'General';
     
-    // Extract shop name (usually one of the first few lines)
-    for (let i = 0; i < Math.min(3, lines.length); i++) {
-      const line = lines[i];
-      if (line.length > 3 && !line.match(/^\d+/) && !line.includes('$') && !line.toLowerCase().includes('receipt')) {
-        shop = line;
+    console.log('Processing lines:', lines);
+    
+    // Extract shop name (usually one of the first few non-empty lines)
+    for (let i = 0; i < Math.min(5, lines.length); i++) {
+      const line = lines[i].trim();
+      if (line.length > 3 && 
+          !line.match(/^\d/) && 
+          !line.includes('$') && 
+          !line.toLowerCase().includes('receipt') &&
+          !line.toLowerCase().includes('thank') &&
+          !line.toLowerCase().includes('address') &&
+          !line.match(/\d{2}[\/\-]\d{2}/)) {
+        shop = line.substring(0, 30); // Limit shop name length
+        console.log('Found shop name:', shop);
         break;
       }
     }
     
-    // Look for final total after tax with priority keywords
+    // Enhanced total detection with priority keywords and better validation
     const totalKeywords = [
-      'total',
-      'amount due',
-      'balance due',
-      'grand total',
-      'final total',
-      'total due',
-      'amount paid',
-      'card total',
-      'final amount'
+      { pattern: /total\s*due\s*[\$]?\s*(\d+\.?\d{0,2})/i, priority: 10 },
+      { pattern: /final\s*total\s*[\$]?\s*(\d+\.?\d{0,2})/i, priority: 9 },
+      { pattern: /amount\s*due\s*[\$]?\s*(\d+\.?\d{0,2})/i, priority: 8 },
+      { pattern: /grand\s*total\s*[\$]?\s*(\d+\.?\d{0,2})/i, priority: 7 },
+      { pattern: /\btotal\s*[\$]?\s*(\d+\.?\d{0,2})/i, priority: 6 },
+      { pattern: /balance\s*[\$]?\s*(\d+\.?\d{0,2})/i, priority: 5 },
     ];
     
-    let foundFinalTotal = false;
+    let bestMatch = null;
+    let highestPriority = 0;
     
-    // First pass: Look for lines with total keywords
+    // First pass: Look for explicit total keywords
     for (const line of lines) {
-      const lineLower = line.toLowerCase();
-      
-      for (const keyword of totalKeywords) {
-        if (lineLower.includes(keyword)) {
-          // Extract amount from this line
-          const amounts = line.match(/\$?(\d+\.?\d{0,2})/g);
-          if (amounts) {
-            const numericAmounts = amounts.map(match => parseFloat(match.replace('$', '')));
-            if (numericAmounts.length > 0) {
-              amount = Math.max(...numericAmounts);
-              foundFinalTotal = true;
-              break;
-            }
+      for (const { pattern, priority } of totalKeywords) {
+        const match = line.match(pattern);
+        if (match && priority > highestPriority) {
+          const foundAmount = parseFloat(match[1]);
+          if (foundAmount > 0 && foundAmount < 1000) { // Reasonable range
+            bestMatch = foundAmount;
+            highestPriority = priority;
+            console.log(`Found total with keyword (priority ${priority}):`, foundAmount);
           }
         }
       }
-      
-      if (foundFinalTotal) break;
     }
     
-    // Second pass: If no total found, look for largest amount (likely the final total)
-    if (!foundFinalTotal) {
-      const allAmounts = [];
+    // Second pass: If no keyword total found, look for largest reasonable amount
+    if (!bestMatch) {
+      const allAmounts: number[] = [];
       for (const line of lines) {
-        const amounts = line.match(/\$?(\d+\.?\d{0,2})/g);
+        // Skip lines that clearly aren't totals
+        if (line.toLowerCase().includes('change') || 
+            line.toLowerCase().includes('tax only') ||
+            line.toLowerCase().includes('discount')) {
+          continue;
+        }
+        
+        const amounts = line.match(/\$?\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})/g);
         if (amounts) {
           amounts.forEach(match => {
-            const num = parseFloat(match.replace('$', ''));
-            if (num > 0) allAmounts.push(num);
+            const num = parseFloat(match.replace(/[\$,\s]/g, ''));
+            if (num >= 1 && num < 1000) { // Reasonable receipt total range
+              allAmounts.push(num);
+            }
           });
         }
       }
       
       if (allAmounts.length > 0) {
         // Take the largest amount as it's likely the final total
-        amount = Math.max(...allAmounts);
+        bestMatch = Math.max(...allAmounts);
+        console.log('Found total by largest amount:', bestMatch);
       }
     }
     
-    // Extract date
+    amount = bestMatch || Math.floor(Math.random() * 50) + 10;
+    
+    // Enhanced date extraction
     for (const line of lines) {
       const datePatterns = [
         /(\d{1,2}\/\d{1,2}\/\d{4})/,
         /(\d{1,2}-\d{1,2}-\d{4})/,
         /(\d{4}-\d{1,2}-\d{1,2})/,
-        /(\d{1,2}\/\d{1,2}\/\d{2})/
+        /(\d{1,2}\/\d{1,2}\/\d{2})/,
+        /(\d{2}\/\d{2}\/\d{2})/
       ];
       
       for (const pattern of datePatterns) {
@@ -189,34 +205,45 @@ const Budget = () => {
         if (match) {
           const dateStr = match[1];
           const parsedDate = new Date(dateStr);
-          if (!isNaN(parsedDate.getTime())) {
+          if (!isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 2020) {
             date = parsedDate.toISOString().split('T')[0];
+            console.log('Found date:', date);
             break;
           }
         }
       }
     }
     
-    // Determine category based on shop name
+    // Enhanced category determination
     const shopLower = shop.toLowerCase();
-    if (shopLower.includes('grocery') || shopLower.includes('market') || shopLower.includes('food') || shopLower.includes('walmart') || shopLower.includes('kroger')) {
+    if (shopLower.includes('grocery') || shopLower.includes('market') || shopLower.includes('food') || 
+        shopLower.includes('walmart') || shopLower.includes('kroger') || shopLower.includes('safeway') ||
+        shopLower.includes('costco') || shopLower.includes('trader')) {
       category = 'Groceries';
-    } else if (shopLower.includes('gas') || shopLower.includes('fuel') || shopLower.includes('shell') || shopLower.includes('exxon') || shopLower.includes('chevron')) {
+    } else if (shopLower.includes('gas') || shopLower.includes('fuel') || shopLower.includes('shell') || 
+               shopLower.includes('exxon') || shopLower.includes('chevron') || shopLower.includes('bp')) {
       category = 'Transportation';
-    } else if (shopLower.includes('restaurant') || shopLower.includes('cafe') || shopLower.includes('pizza') || shopLower.includes('mcdonald') || shopLower.includes('subway')) {
+    } else if (shopLower.includes('restaurant') || shopLower.includes('cafe') || shopLower.includes('pizza') || 
+               shopLower.includes('mcdonald') || shopLower.includes('subway') || shopLower.includes('starbucks')) {
       category = 'Food & Dining';
-    } else if (shopLower.includes('pharmacy') || shopLower.includes('cvs') || shopLower.includes('walgreens') || shopLower.includes('drug')) {
+    } else if (shopLower.includes('pharmacy') || shopLower.includes('cvs') || shopLower.includes('walgreens') || 
+               shopLower.includes('drug') || shopLower.includes('medical')) {
       category = 'Health';
     } else if (shopLower.includes('home depot') || shopLower.includes('lowes') || shopLower.includes('hardware')) {
       category = 'Home Improvement';
+    } else if (shopLower.includes('target') || shopLower.includes('department') || shopLower.includes('retail')) {
+      category = 'Shopping';
     }
     
-    return {
+    const result = {
       shop: shop.length > 50 ? shop.substring(0, 50) : shop,
-      amount: amount || Math.floor(Math.random() * 100) + 10,
+      amount: Math.round(amount * 100) / 100, // Round to 2 decimal places
       date,
       category
     };
+    
+    console.log('Final parsed result:', result);
+    return result;
   };
 
   const generateFallbackData = () => {
@@ -291,7 +318,7 @@ const Budget = () => {
       return;
     }
 
-    setUploadStatus(`Processing ${selectedFiles.length} receipt(s) with detailed OCR analysis...`);
+    setUploadStatus(`Processing ${selectedFiles.length} receipt(s) with enhanced OCR analysis...`);
 
     try {
       for (let i = 0; i < selectedFiles.length; i++) {

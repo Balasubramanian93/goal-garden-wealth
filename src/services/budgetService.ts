@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { receiptService, type Receipt } from './receiptService';
 
@@ -131,34 +130,96 @@ export const budgetService = {
     return { expense, receipt };
   },
 
-  // Parse items from OCR text
+  // Enhanced OCR text cleaning and parsing
+  cleanOcrText(text: string): string {
+    return text
+      .replace(/[^\w\s$.,()-]/g, ' ') // Remove special characters except basic ones
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/(\d)\s+\.(\d)/g, '$1.$2') // Fix split decimals like "5 .99" -> "5.99"
+      .replace(/\$\s+(\d)/g, '$$$1') // Fix split prices like "$ 5.99" -> "$5.99"
+      .replace(/(\d)\s*\$(\d)/g, '$1 $$$2') // Fix merged prices like "5$10" -> "5 $10"
+      .trim();
+  },
+
+  // Enhanced receipt parsing with better validation
   parseReceiptItems(ocrText: string, receiptId: string) {
-    const lines = ocrText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const cleanedText = this.cleanOcrText(ocrText);
+    const lines = cleanedText.split('\n').map(line => line.trim()).filter(line => line.length > 2);
     const items: Omit<any, 'id' | 'created_at'>[] = [];
 
+    console.log('Parsing OCR text:', cleanedText);
+
     for (const line of lines) {
-      // Look for lines with prices (contains $ and numbers)
-      const priceMatch = line.match(/\$?(\d+\.?\d{0,2})/);
-      if (priceMatch && !line.toLowerCase().includes('total') && !line.toLowerCase().includes('tax')) {
-        const price = parseFloat(priceMatch[1]);
-        if (price > 0 && price < 1000) { // Reasonable item price range
+      // Skip lines that are clearly not items
+      if (this.shouldSkipLine(line)) {
+        continue;
+      }
+
+      // Enhanced price matching - look for various price formats
+      const priceMatches = line.match(/\$?\s*(\d{1,3}(?:,\d{3})*\.?\d{0,2})\s*(?:\$|$)/g);
+      
+      if (priceMatches && priceMatches.length > 0) {
+        // Extract the numeric value from the last price match (usually the item price)
+        const lastPriceMatch = priceMatches[priceMatches.length - 1];
+        const priceValue = parseFloat(lastPriceMatch.replace(/[\$,\s]/g, ''));
+        
+        // Validate price range (reasonable item prices)
+        if (priceValue > 0.01 && priceValue < 500) {
           // Extract item name (everything before the price)
-          const itemName = line.replace(/\$?\d+\.?\d{0,2}.*$/, '').trim();
-          if (itemName.length > 2) {
-            const category = receiptService.categorizeItem(itemName);
-            items.push({
-              receipt_id: receiptId,
-              item_name: itemName,
-              item_price: price,
-              category,
-              quantity: 1,
-            });
+          const itemNamePart = line.substring(0, line.lastIndexOf(lastPriceMatch)).trim();
+          const cleanedItemName = this.cleanItemName(itemNamePart);
+          
+          if (cleanedItemName.length >= 2) {
+            // Determine quantity if present
+            const quantityMatch = cleanedItemName.match(/^(\d+)\s*x?\s*/i);
+            const quantity = quantityMatch ? parseInt(quantityMatch[1]) : 1;
+            const finalItemName = quantityMatch ? 
+              cleanedItemName.replace(quantityMatch[0], '').trim() : cleanedItemName;
+
+            if (finalItemName.length >= 2) {
+              const category = receiptService.categorizeItem(finalItemName);
+              items.push({
+                receipt_id: receiptId,
+                item_name: finalItemName.substring(0, 100), // Limit length
+                item_price: priceValue,
+                category,
+                quantity: Math.min(quantity, 50), // Reasonable max quantity
+              });
+            }
           }
         }
       }
     }
 
+    console.log('Parsed items:', items);
     return items;
+  },
+
+  // Helper to determine if a line should be skipped
+  shouldSkipLine(line: string): boolean {
+    const skipPatterns = [
+      /^(total|subtotal|tax|discount|change|cash|credit|debit)/i,
+      /^(thank you|receipt|store|address|phone|hours)/i,
+      /^(date|time|cashier|register|transaction)/i,
+      /^\d{2}[\/\-]\d{2}[\/\-]\d{2,4}/, // Date patterns
+      /^\d{1,2}:\d{2}/, // Time patterns
+      /^[\*\-=]{3,}/, // Separator lines
+      /^[a-z]{1,2}$/i, // Single letters
+      /^\d+$/, // Just numbers
+    ];
+
+    return skipPatterns.some(pattern => pattern.test(line.trim()));
+  },
+
+  // Clean and validate item names
+  cleanItemName(name: string): string {
+    return name
+      .replace(/^\d+\s*x?\s*/i, '') // Remove quantity prefix
+      .replace(/[^\w\s&'-]/g, ' ') // Keep only letters, numbers, spaces, and common punctuation
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim()
+      .toLowerCase()
+      .replace(/\b\w/g, l => l.toUpperCase()); // Title case
   },
 
   // Calculate category totals from items
@@ -210,47 +271,98 @@ export const budgetService = {
     return data;
   },
 
-  // Delete an expense and associated receipt data
+  // Enhanced delete expense with proper cascade deletion
   async deleteExpense(expenseId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     // First, get the expense to check if it has a receipt
     const { data: expense, error: fetchError } = await supabase
       .from('expenses')
       .select('receipt_id')
       .eq('id', expenseId)
+      .eq('user_id', user.id) // Ensure user owns the expense
       .single();
 
     if (fetchError) throw fetchError;
 
-    // If there's a receipt associated, delete the receipt file from storage
+    // If there's a receipt associated, delete all related data
     if (expense.receipt_id) {
-      // Get receipt file path
+      console.log('Deleting receipt and associated data for receipt:', expense.receipt_id);
+
+      // Delete category spending records associated with this receipt
+      const { error: categoryError } = await supabase
+        .from('category_spending')
+        .delete()
+        .eq('receipt_id', expense.receipt_id)
+        .eq('user_id', user.id);
+
+      if (categoryError) {
+        console.error('Error deleting category spending:', categoryError);
+      }
+
+      // Delete receipt items
+      const { error: itemsError } = await supabase
+        .from('receipt_items')
+        .delete()
+        .eq('receipt_id', expense.receipt_id);
+
+      if (itemsError) {
+        console.error('Error deleting receipt items:', itemsError);
+      }
+
+      // Get receipt file path for storage deletion
       const { data: receipt } = await supabase
         .from('receipts')
         .select('file_path')
         .eq('id', expense.receipt_id)
+        .eq('user_id', user.id)
         .single();
 
+      // Delete file from storage if it exists
       if (receipt?.file_path) {
-        // Delete file from storage
-        await supabase.storage
+        const { error: storageError } = await supabase.storage
           .from('receipts')
           .remove([receipt.file_path]);
+
+        if (storageError) {
+          console.error('Error deleting receipt file from storage:', storageError);
+        }
       }
 
-      // Delete receipt record (this will cascade delete receipt_items and category_spending due to foreign keys)
-      await supabase
+      // Delete the receipt record
+      const { error: receiptError } = await supabase
         .from('receipts')
         .delete()
-        .eq('id', expense.receipt_id);
+        .eq('id', expense.receipt_id)
+        .eq('user_id', user.id);
+
+      if (receiptError) {
+        console.error('Error deleting receipt:', receiptError);
+      }
     }
 
-    // Delete the expense
+    // Delete any category spending records associated with this expense (non-receipt expenses)
+    const { error: expenseCategoryError } = await supabase
+      .from('category_spending')
+      .delete()
+      .eq('expense_id', expenseId)
+      .eq('user_id', user.id);
+
+    if (expenseCategoryError) {
+      console.error('Error deleting expense category spending:', expenseCategoryError);
+    }
+
+    // Finally, delete the expense
     const { error } = await supabase
       .from('expenses')
       .delete()
-      .eq('id', expenseId);
+      .eq('id', expenseId)
+      .eq('user_id', user.id);
 
     if (error) throw error;
+
+    console.log('Successfully deleted expense and all associated data');
   },
 
   // Get budget periods

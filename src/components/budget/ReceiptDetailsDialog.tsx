@@ -113,7 +113,9 @@ const ReceiptDetailsDialog = ({ isOpen, onOpenChange, receiptId }: ReceiptDetail
                 <div className="flex items-center gap-2">
                   <Store className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">Store:</span>
-                  <span>{receipt.store_name || 'Unknown'}</span>
+                  <span className="truncate max-w-[200px]" title={receipt.store_name || 'Unknown'}>
+                    {receipt.store_name || 'Unknown'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -124,6 +126,13 @@ const ReceiptDetailsDialog = ({ isOpen, onOpenChange, receiptId }: ReceiptDetail
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">Total Amount:</span>
                   <span className="font-semibold">${receipt.total_amount.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">File:</span>
+                  <span className="truncate max-w-[200px]" title={receipt.file_name}>
+                    {receipt.file_name}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -145,7 +154,9 @@ const ReceiptDetailsDialog = ({ isOpen, onOpenChange, receiptId }: ReceiptDetail
                     {Object.entries(groupedItems).map(([category, items]) => (
                       <div key={category} className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <h4 className="font-semibold text-sm">{category}</h4>
+                          <h4 className="font-semibold text-sm truncate max-w-[150px]" title={category}>
+                            {category}
+                          </h4>
                           <span className="font-medium text-sm">
                             ${calculateCategoryTotal(items).toFixed(2)}
                           </span>
@@ -153,7 +164,7 @@ const ReceiptDetailsDialog = ({ isOpen, onOpenChange, receiptId }: ReceiptDetail
                         <div className="space-y-1 pl-4">
                           {items.map((item) => (
                             <div key={item.id} className="flex justify-between items-center text-sm">
-                              <span className="text-muted-foreground">
+                              <span className="text-muted-foreground truncate max-w-[180px]" title={item.item_name}>
                                 {item.quantity > 1 && `${item.quantity}x `}{item.item_name}
                               </span>
                               <span>${item.item_price.toFixed(2)}</span>
