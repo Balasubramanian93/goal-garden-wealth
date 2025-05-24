@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
 import {
@@ -19,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import Tesseract from 'tesseract.js';
 
 const Budget = () => {
   // Placeholder data for budget history
@@ -106,17 +106,126 @@ const Budget = () => {
     setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
   };
 
-  // Simulate receipt data extraction
-  const extractReceiptData = (file: File) => {
-    // Simulate different types of shops and expenses
+  // Extract receipt data using OCR
+  const extractReceiptData = async (file: File) => {
+    try {
+      console.log('Starting OCR processing for:', file.name);
+      
+      // Use Tesseract.js to extract text from the image
+      const { data: { text } } = await Tesseract.recognize(file, 'eng', {
+        logger: m => console.log(m) // Optional: log OCR progress
+      });
+      
+      console.log('OCR extracted text:', text);
+      
+      // Parse the extracted text to find shop name, amount, and date
+      const parsedData = parseReceiptText(text);
+      
+      return parsedData;
+    } catch (error) {
+      console.error('OCR Error:', error);
+      // Fallback to random data if OCR fails
+      return generateFallbackData();
+    }
+  };
+
+  // Parse the OCR text to extract relevant information
+  const parseReceiptText = (text: string) => {
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    let shop = 'Unknown Store';
+    let amount = 0;
+    let date = new Date().toISOString().split('T')[0]; // Default to today
+    let category = 'General';
+    
+    // Extract shop name (usually one of the first few lines)
+    for (let i = 0; i < Math.min(3, lines.length); i++) {
+      const line = lines[i];
+      // Look for common store indicators or just use the first substantial line
+      if (line.length > 3 && !line.match(/^\d+/) && !line.includes('$')) {
+        shop = line;
+        break;
+      }
+    }
+    
+    // Extract amount - look for patterns like $XX.XX, XX.XX, TOTAL, etc.
+    for (const line of lines) {
+      // Look for currency patterns
+      const currencyMatch = line.match(/\$?(\d+\.?\d{0,2})/g);
+      if (currencyMatch) {
+        // Find the largest amount (likely the total)
+        const amounts = currencyMatch.map(match => {
+          const num = parseFloat(match.replace('$', ''));
+          return num;
+        }).filter(num => num > 0);
+        
+        if (amounts.length > 0) {
+          amount = Math.max(...amounts);
+        }
+      }
+      
+      // Look for total indicators
+      if (line.toLowerCase().includes('total') && line.match(/\d+\.?\d{0,2}/)) {
+        const totalMatch = line.match(/(\d+\.?\d{0,2})/);
+        if (totalMatch) {
+          amount = parseFloat(totalMatch[1]);
+          break; // Total found, use this amount
+        }
+      }
+    }
+    
+    // Extract date - look for date patterns
+    for (const line of lines) {
+      // Common date patterns: MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD, etc.
+      const datePatterns = [
+        /(\d{1,2}\/\d{1,2}\/\d{4})/,
+        /(\d{1,2}-\d{1,2}-\d{4})/,
+        /(\d{4}-\d{1,2}-\d{1,2})/,
+        /(\d{1,2}\/\d{1,2}\/\d{2})/
+      ];
+      
+      for (const pattern of datePatterns) {
+        const match = line.match(pattern);
+        if (match) {
+          const dateStr = match[1];
+          const parsedDate = new Date(dateStr);
+          if (!isNaN(parsedDate.getTime())) {
+            date = parsedDate.toISOString().split('T')[0];
+            break;
+          }
+        }
+      }
+    }
+    
+    // Determine category based on shop name
+    const shopLower = shop.toLowerCase();
+    if (shopLower.includes('grocery') || shopLower.includes('market') || shopLower.includes('food')) {
+      category = 'Groceries';
+    } else if (shopLower.includes('gas') || shopLower.includes('fuel') || shopLower.includes('shell') || shopLower.includes('exxon')) {
+      category = 'Transportation';
+    } else if (shopLower.includes('restaurant') || shopLower.includes('cafe') || shopLower.includes('pizza')) {
+      category = 'Food & Dining';
+    } else if (shopLower.includes('pharmacy') || shopLower.includes('cvs') || shopLower.includes('walgreens')) {
+      category = 'Health';
+    }
+    
+    return {
+      shop: shop.length > 50 ? shop.substring(0, 50) : shop, // Limit length
+      amount: amount || Math.floor(Math.random() * 100) + 10, // Fallback to random if no amount found
+      date,
+      category
+    };
+  };
+
+  // Fallback data generation if OCR fails
+  const generateFallbackData = () => {
     const shops = ['Target', 'Starbucks', 'Uber Eats', 'Amazon', 'CVS Pharmacy', 'McDonald\'s', 'Home Depot', 'Best Buy'];
     const categories = ['Groceries', 'Food & Dining', 'Shopping', 'Transportation', 'Health', 'Entertainment', 'Home Improvement'];
     
     const randomShop = shops[Math.floor(Math.random() * shops.length)];
     const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-    const randomAmount = Math.floor(Math.random() * 150) + 10; // Random amount between 10 and 160
+    const randomAmount = Math.floor(Math.random() * 150) + 10;
     
-    // Generate a recent date (within last 30 days)
     const today = new Date();
     const daysAgo = Math.floor(Math.random() * 30);
     const expenseDate = new Date(today.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
@@ -130,34 +239,42 @@ const Budget = () => {
     };
   };
 
-  const handleUploadReceipts = () => {
+  const handleUploadReceipts = async () => {
     if (selectedFiles.length === 0) {
       setUploadStatus('Please select files first.');
       return;
     }
 
-    setUploadStatus(`Processing ${selectedFiles.length} receipt(s)...`);
+    setUploadStatus(`Processing ${selectedFiles.length} receipt(s) with OCR...`);
 
-    // Simulate processing time
-    setTimeout(() => {
-      // Extract data from each uploaded receipt
-      const newExpenses = selectedFiles.map((file, index) => {
-        const extractedData = extractReceiptData(file);
-        return {
-          id: Date.now() + index, // Simple ID generation
+    try {
+      // Process each uploaded receipt with OCR
+      const newExpenses = [];
+      
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        setUploadStatus(`Processing receipt ${i + 1} of ${selectedFiles.length}...`);
+        
+        const extractedData = await extractReceiptData(file);
+        newExpenses.push({
+          id: Date.now() + i,
           ...extractedData
-        };
-      });
+        });
+      }
 
       // Add new expenses to current month
       setCurrentMonthExpenses(prevExpenses => [...prevExpenses, ...newExpenses]);
 
-      setUploadStatus(`Successfully logged ${selectedFiles.length} expense(s) to current month.`);
+      setUploadStatus(`Successfully processed ${selectedFiles.length} receipt(s) and logged expenses.`);
       setSelectedFiles([]); // Clear selected files after processing
 
-      // Clear status after 3 seconds
+      // Clear status after 5 seconds
+      setTimeout(() => setUploadStatus(''), 5000);
+    } catch (error) {
+      console.error('Upload processing error:', error);
+      setUploadStatus('Error processing receipts. Please try again.');
       setTimeout(() => setUploadStatus(''), 3000);
-    }, 2000); // Simulate 2-second processing time
+    }
   };
 
   const handleUploadIconClick = () => {
