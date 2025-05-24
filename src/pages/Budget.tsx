@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
 import {
   Card,
@@ -9,8 +8,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
-import { PlusCircle, History, ChevronRight, Upload, XCircle } from 'lucide-react';
+import { PlusCircle, History, ChevronRight, Upload, XCircle, Edit } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -21,6 +30,8 @@ import {
 import Tesseract from 'tesseract.js';
 import { useBudget } from '@/hooks/useBudget';
 import { useAuth } from '@/contexts/AuthContext';
+import { budgetService } from '@/services/budgetService';
+import { toast } from '@/hooks/use-toast';
 
 const Budget = () => {
   const { user } = useAuth();
@@ -38,6 +49,9 @@ const Budget = () => {
   const [selectedYear, setSelectedYear] = useState('All');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadStatus, setUploadStatus] = useState('');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editIncome, setEditIncome] = useState(currentBudgetPeriod?.total_income || 0);
+  const [isUpdatingIncome, setIsUpdatingIncome] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get unique years from budget history
@@ -231,6 +245,43 @@ const Budget = () => {
     };
   };
 
+  const handleEditIncome = async () => {
+    if (!currentBudgetPeriod) return;
+
+    setIsUpdatingIncome(true);
+    try {
+      await budgetService.updateBudgetIncome(currentBudgetPeriod.id, editIncome);
+      
+      // Update budget period totals after income change
+      await budgetService.updateBudgetPeriodTotals(currentBudgetPeriod.id);
+      
+      setIsEditDialogOpen(false);
+      toast({
+        title: "Income updated",
+        description: "Your monthly income has been successfully updated.",
+      });
+      
+      // Force refresh of current budget period
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating income:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update income. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingIncome(false);
+    }
+  };
+
+  // Set editIncome when currentBudgetPeriod changes
+  useEffect(() => {
+    if (currentBudgetPeriod) {
+      setEditIncome(currentBudgetPeriod.total_income);
+    }
+  }, [currentBudgetPeriod]);
+
   const handleUploadReceipts = async () => {
     if (selectedFiles.length === 0) {
       setUploadStatus('Please select files first.');
@@ -290,9 +341,66 @@ const Budget = () => {
         <div className="md:col-span-2 flex flex-col gap-6">
           {/* Current Month Budget Summary */}
           <Card>
-            <CardHeader>
-              <CardTitle>Current Month: {currentPeriodName}</CardTitle>
-              <CardDescription>Overview of your current month's budget.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Current Month: {currentPeriodName}</CardTitle>
+                <CardDescription>Overview of your current month's budget.</CardDescription>
+              </div>
+              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Monthly Budget</DialogTitle>
+                    <DialogDescription>
+                      Update your monthly income. Total expenses and remaining budget are calculated automatically.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <label htmlFor="income" className="text-right font-medium">
+                        Total Income
+                      </label>
+                      <Input
+                        id="income"
+                        type="number"
+                        value={editIncome}
+                        onChange={(e) => setEditIncome(Number(e.target.value))}
+                        className="col-span-3"
+                        placeholder="Enter monthly income"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <label className="text-right text-muted-foreground">
+                        Total Expenses
+                      </label>
+                      <div className="col-span-3 p-2 bg-muted rounded">
+                        ${currentBudgetPeriod?.total_expenses || 0}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <label className="text-right text-muted-foreground">
+                        Remaining Budget
+                      </label>
+                      <div className="col-span-3 p-2 bg-muted rounded">
+                        ${editIncome - (currentBudgetPeriod?.total_expenses || 0)}
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button 
+                      onClick={handleEditIncome} 
+                      disabled={isUpdatingIncome}
+                    >
+                      {isUpdatingIncome ? 'Updating...' : 'Update Income'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
