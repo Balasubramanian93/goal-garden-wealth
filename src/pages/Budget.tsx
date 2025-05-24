@@ -12,6 +12,7 @@ import ExpensesList from '@/components/budget/ExpensesList';
 import BudgetHistoryCard from '@/components/budget/BudgetHistoryCard';
 import ReceiptUploadCard from '@/components/budget/ReceiptUploadCard';
 import EditIncomeDialog from '@/components/budget/EditIncomeDialog';
+import AddExpenseDialog from '@/components/budget/AddExpenseDialog';
 
 const Budget = () => {
   const { user } = useAuth();
@@ -31,6 +32,7 @@ const Budget = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadStatus, setUploadStatus] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddExpenseDialogOpen, setIsAddExpenseDialogOpen] = useState(false);
   const [editIncome, setEditIncome] = useState(currentBudgetPeriod?.total_income.toString() || '0');
   const [isUpdatingIncome, setIsUpdatingIncome] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -324,6 +326,15 @@ const Budget = () => {
     });
   };
 
+  const handleAddManualExpense = async (expenseData: {
+    shop: string;
+    amount: number;
+    date: string;
+    category: string;
+  }) => {
+    await addExpense(expenseData);
+  };
+
   if (!user) {
     return (
       <MainLayout>
@@ -365,16 +376,22 @@ const Budget = () => {
             onUpdateExpense={handleUpdateExpense}
           />
 
-          {/* Log New Expense (Placeholder) */}
+          {/* Log New Expense */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg font-semibold">Log New Expense</CardTitle>
-              <PlusCircle className="h-6 w-6 text-muted-foreground" />
+              <PlusCircle 
+                className="h-6 w-6 text-muted-foreground cursor-pointer hover:text-primary transition-colors" 
+                onClick={() => setIsAddExpenseDialogOpen(true)}
+              />
             </CardHeader>
             <CardContent>
               <CardDescription className="mb-4">Add a new transaction to your budget.</CardDescription>
-              <div className="p-6 border border-dashed rounded-md text-muted-foreground text-center h-40 flex items-center justify-center">
-                Expense Logging Form Placeholder
+              <div 
+                className="p-6 border border-dashed rounded-md text-muted-foreground text-center h-40 flex items-center justify-center cursor-pointer hover:border-primary hover:text-primary transition-colors"
+                onClick={() => setIsAddExpenseDialogOpen(true)}
+              >
+                Click here or the + icon to add a new expense
               </div>
             </CardContent>
           </Card>
@@ -415,6 +432,14 @@ const Budget = () => {
         currentBudgetPeriod={currentBudgetPeriod}
         onSave={handleEditIncome}
         isUpdating={isUpdatingIncome}
+      />
+
+      {/* Add Expense Dialog */}
+      <AddExpenseDialog
+        isOpen={isAddExpenseDialogOpen}
+        onOpenChange={setIsAddExpenseDialogOpen}
+        onAddExpense={handleAddManualExpense}
+        isAdding={isAddingExpense}
       />
     </MainLayout>
   );
