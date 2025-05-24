@@ -88,7 +88,10 @@ const Budget = () => {
       console.log('Starting enhanced OCR processing for:', file.name);
       
       const { data: { text } } = await Tesseract.recognize(file, 'eng', {
-        logger: m => console.log(m)
+        logger: m => console.log(m),
+        // Better OCR settings for receipt processing
+        tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+        preserve_interword_spaces: '1',
       });
       
       console.log('Raw OCR text:', text);
@@ -122,6 +125,7 @@ const Budget = () => {
           !line.toLowerCase().includes('receipt') &&
           !line.toLowerCase().includes('thank') &&
           !line.toLowerCase().includes('address') &&
+          !line.toLowerCase().includes('phone') &&
           !line.match(/\d{2}[\/\-]\d{2}/)) {
         shop = line.substring(0, 30); // Limit shop name length
         console.log('Found shop name:', shop);
