@@ -2,6 +2,16 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Edit3, Trash2, Check, X, Receipt } from 'lucide-react';
 import { Expense } from '@/services/budgetService';
 import ReceiptDetailsDialog from './ReceiptDetailsDialog';
@@ -17,6 +27,7 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
   const [isEditing, setIsEditing] = useState(false);
   const [editAmount, setEditAmount] = useState(expense.amount.toString());
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleSave = () => {
     const newAmount = parseFloat(editAmount);
@@ -32,8 +43,9 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
   };
 
   const handleDelete = () => {
-    if (onDelete && window.confirm('Are you sure you want to delete this expense?')) {
+    if (onDelete) {
       onDelete(expense.id);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -107,7 +119,7 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
                       size="sm" 
                       variant="ghost" 
                       className="h-8 w-8 p-0" 
-                      onClick={handleDelete}
+                      onClick={() => setIsDeleteDialogOpen(true)}
                       disabled={isDeleting}
                     >
                       <Trash2 className="h-3 w-3" />
@@ -125,6 +137,23 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
         onOpenChange={setIsReceiptDialogOpen}
         receiptId={expense.receipt_id}
       />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this expense from {expense.shop} for ${expense.amount.toFixed(2)}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
