@@ -51,7 +51,7 @@ const Budget = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadStatus, setUploadStatus] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editIncome, setEditIncome] = useState(currentBudgetPeriod?.total_income || 0);
+  const [editIncome, setEditIncome] = useState(currentBudgetPeriod?.total_income.toString() || '0');
   const [isUpdatingIncome, setIsUpdatingIncome] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -258,7 +258,7 @@ const Budget = () => {
     if (!currentBudgetPeriod) return;
 
     // Parse the income value as a number
-    const incomeValue = parseFloat(editIncome.toString());
+    const incomeValue = parseFloat(editIncome);
     if (isNaN(incomeValue) || incomeValue < 0) {
       toast({
         title: "Invalid income",
@@ -298,7 +298,7 @@ const Budget = () => {
   // Set editIncome when currentBudgetPeriod changes
   useEffect(() => {
     if (currentBudgetPeriod) {
-      setEditIncome(currentBudgetPeriod.total_income);
+      setEditIncome(currentBudgetPeriod.total_income.toString());
     }
   }, [currentBudgetPeriod]);
 
@@ -407,7 +407,7 @@ const Budget = () => {
                         Remaining Budget
                       </label>
                       <div className="col-span-3 p-2 bg-muted rounded">
-                        ${(parseFloat(editIncome.toString()) || 0) - (currentBudgetPeriod?.total_expenses || 0)}
+                        ${(parseFloat(editIncome) || 0) - (currentBudgetPeriod?.total_expenses || 0)}
                       </div>
                     </div>
                   </div>
