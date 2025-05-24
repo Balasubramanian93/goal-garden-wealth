@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
+
+import React, { useState, useRef } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
 import {
   Card,
@@ -9,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { PlusCircle, History, ChevronRight, Wallet, Upload, XCircle } from 'lucide-react';
+import { PlusCircle, History, ChevronRight, Upload, XCircle } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -17,74 +18,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import Tesseract from 'tesseract.js';
+import { useBudget } from '@/hooks/useBudget';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Budget = () => {
-  // Placeholder data for budget history
-  const budgetHistory = useMemo(() => [
-    { id: '2024-07', period: 'July 2024', year: '2024', totalExpenses: 1100, totalIncome: 3500, remaining: 2400 },
-    { id: '2024-06', period: 'June 2024', year: '2024', totalExpenses: 1300, totalIncome: 3500, remaining: 2200 },
-    { id: '2024-05', period: 'May 2024', year: '2024', totalExpenses: 1500, totalIncome: 3000, remaining: 1500 },
-    { id: '2024-04', period: 'April 2024', year: '2024', totalExpenses: 1200, totalIncome: 3000, remaining: 1800 },
-    { id: '2023-12', period: 'December 2023', year: '2023', totalExpenses: 1800, totalIncome: 3000, remaining: 1200 },
-    { id: '2023-11', period: 'November 2023', year: '2023', totalExpenses: 1400, totalIncome: 3000, remaining: 1600 },
-    { id: '2023-10', period: 'October 2023', year: '2023', totalExpenses: 1600, totalIncome: 3000, remaining: 1400 },
-    { id: '2023-09', period: 'September 2023', year: '2023', totalExpenses: 1750, totalIncome: 3000, remaining: 1250 },
-    { id: '2023-08', period: 'August 2023', year: '2023', totalExpenses: 1900, totalIncome: 3000, remaining: 1100 },
-    { id: '2023-07', period: 'July 2023', year: '2023', totalExpenses: 1550, totalIncome: 3000, remaining: 1450 },
-  ], []);
+  const { user } = useAuth();
+  const {
+    currentMonthExpenses,
+    budgetHistory,
+    currentBudgetPeriod,
+    currentPeriodName,
+    addExpense,
+    isLoading,
+    isAddingExpense,
+  } = useBudget();
 
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(3);
   const [selectedYear, setSelectedYear] = useState('All');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadStatus, setUploadStatus] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // State for current month expenses
-  const [currentMonthExpenses, setCurrentMonthExpenses] = useState([
-    { id: 1, shop: 'Walmart', amount: 85.50, date: '2024-07-15', category: 'Groceries' },
-    { id: 2, shop: 'Shell Gas Station', amount: 45.00, date: '2024-07-14', category: 'Transportation' },
-    { id: 3, shop: 'Electric Company', amount: 120.00, date: '2024-07-12', category: 'Utilities' },
-  ]);
 
-  // State to hold current month budget data, initialized from history or with defaults
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    const baseData = budgetHistory.find(item => item.id === '2024-07') || {
-      id: '2024-07', period: 'July 2024', year: '2024', totalExpenses: 1100, totalIncome: 3500, remaining: 2400
-    };
-    
-    // Calculate actual total from expenses
-    const actualTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-    return {
-      ...baseData,
-      totalExpenses: actualTotal,
-      remaining: baseData.totalIncome - actualTotal
-    };
-  });
-
-  // Update current month when expenses change
-  React.useEffect(() => {
-    const actualTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-    setCurrentMonth(prev => ({
-      ...prev,
-      totalExpenses: actualTotal,
-      remaining: prev.totalIncome - actualTotal
-    }));
-  }, [currentMonthExpenses]);
-
-  const uniqueYears = useMemo(() => {
-    const years = [...new Set(budgetHistory.map(item => item.year))];
+  // Get unique years from budget history
+  const uniqueYears = React.useMemo(() => {
+    const years = [...new Set(budgetHistory.map(item => item.period.split('-')[0]))];
     return ['All', ...years.sort((a, b) => parseInt(b) - parseInt(a))];
   }, [budgetHistory]);
 
-  const filteredHistory = useMemo(() => {
+  // Filter budget history by selected year
+  const filteredHistory = React.useMemo(() => {
     return selectedYear === 'All'
       ? budgetHistory
-      : budgetHistory.filter(item => item.year === selectedYear);
+      : budgetHistory.filter(item => item.period.split('-')[0] === selectedYear);
   }, [budgetHistory, selectedYear]);
 
-  const displayedHistory = useMemo(() => {
+  const displayedHistory = React.useMemo(() => {
     return filteredHistory.slice(0, visibleHistoryCount);
   }, [filteredHistory, visibleHistoryCount]);
 
@@ -94,10 +63,8 @@ const Budget = () => {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      // Convert FileList to Array and add to existing files
       setSelectedFiles(prevFiles => [...prevFiles, ...Array.from(event.target.files)]);
-      setUploadStatus(''); // Clear previous status on new file selection
-      // Clear the value of the input so the same file can be selected again
+      setUploadStatus('');
       if(fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -106,77 +73,101 @@ const Budget = () => {
     setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
   };
 
-  // Extract receipt data using OCR
+  // Enhanced OCR function to extract final total after tax
   const extractReceiptData = async (file: File) => {
     try {
       console.log('Starting OCR processing for:', file.name);
       
-      // Use Tesseract.js to extract text from the image
       const { data: { text } } = await Tesseract.recognize(file, 'eng', {
-        logger: m => console.log(m) // Optional: log OCR progress
+        logger: m => console.log(m)
       });
       
       console.log('OCR extracted text:', text);
       
-      // Parse the extracted text to find shop name, amount, and date
       const parsedData = parseReceiptText(text);
-      
       return parsedData;
     } catch (error) {
       console.error('OCR Error:', error);
-      // Fallback to random data if OCR fails
       return generateFallbackData();
     }
   };
 
-  // Parse the OCR text to extract relevant information
+  // Improved parsing to find final total after tax
   const parseReceiptText = (text: string) => {
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
     let shop = 'Unknown Store';
     let amount = 0;
-    let date = new Date().toISOString().split('T')[0]; // Default to today
+    let date = new Date().toISOString().split('T')[0];
     let category = 'General';
     
     // Extract shop name (usually one of the first few lines)
     for (let i = 0; i < Math.min(3, lines.length); i++) {
       const line = lines[i];
-      // Look for common store indicators or just use the first substantial line
-      if (line.length > 3 && !line.match(/^\d+/) && !line.includes('$')) {
+      if (line.length > 3 && !line.match(/^\d+/) && !line.includes('$') && !line.toLowerCase().includes('receipt')) {
         shop = line;
         break;
       }
     }
     
-    // Extract amount - look for patterns like $XX.XX, XX.XX, TOTAL, etc.
+    // Look for final total after tax with priority keywords
+    const totalKeywords = [
+      'total',
+      'amount due',
+      'balance due',
+      'grand total',
+      'final total',
+      'total due',
+      'amount paid',
+      'card total',
+      'final amount'
+    ];
+    
+    let foundFinalTotal = false;
+    
+    // First pass: Look for lines with total keywords
     for (const line of lines) {
-      // Look for currency patterns
-      const currencyMatch = line.match(/\$?(\d+\.?\d{0,2})/g);
-      if (currencyMatch) {
-        // Find the largest amount (likely the total)
-        const amounts = currencyMatch.map(match => {
-          const num = parseFloat(match.replace('$', ''));
-          return num;
-        }).filter(num => num > 0);
-        
-        if (amounts.length > 0) {
-          amount = Math.max(...amounts);
+      const lineLower = line.toLowerCase();
+      
+      for (const keyword of totalKeywords) {
+        if (lineLower.includes(keyword)) {
+          // Extract amount from this line
+          const amounts = line.match(/\$?(\d+\.?\d{0,2})/g);
+          if (amounts) {
+            const numericAmounts = amounts.map(match => parseFloat(match.replace('$', '')));
+            if (numericAmounts.length > 0) {
+              amount = Math.max(...numericAmounts);
+              foundFinalTotal = true;
+              break;
+            }
+          }
         }
       }
       
-      // Look for total indicators
-      if (line.toLowerCase().includes('total') && line.match(/\d+\.?\d{0,2}/)) {
-        const totalMatch = line.match(/(\d+\.?\d{0,2})/);
-        if (totalMatch) {
-          amount = parseFloat(totalMatch[1]);
-          break; // Total found, use this amount
+      if (foundFinalTotal) break;
+    }
+    
+    // Second pass: If no total found, look for largest amount (likely the final total)
+    if (!foundFinalTotal) {
+      const allAmounts = [];
+      for (const line of lines) {
+        const amounts = line.match(/\$?(\d+\.?\d{0,2})/g);
+        if (amounts) {
+          amounts.forEach(match => {
+            const num = parseFloat(match.replace('$', ''));
+            if (num > 0) allAmounts.push(num);
+          });
         }
+      }
+      
+      if (allAmounts.length > 0) {
+        // Take the largest amount as it's likely the final total
+        amount = Math.max(...allAmounts);
       }
     }
     
-    // Extract date - look for date patterns
+    // Extract date
     for (const line of lines) {
-      // Common date patterns: MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD, etc.
       const datePatterns = [
         /(\d{1,2}\/\d{1,2}\/\d{4})/,
         /(\d{1,2}-\d{1,2}-\d{4})/,
@@ -199,25 +190,26 @@ const Budget = () => {
     
     // Determine category based on shop name
     const shopLower = shop.toLowerCase();
-    if (shopLower.includes('grocery') || shopLower.includes('market') || shopLower.includes('food')) {
+    if (shopLower.includes('grocery') || shopLower.includes('market') || shopLower.includes('food') || shopLower.includes('walmart') || shopLower.includes('kroger')) {
       category = 'Groceries';
-    } else if (shopLower.includes('gas') || shopLower.includes('fuel') || shopLower.includes('shell') || shopLower.includes('exxon')) {
+    } else if (shopLower.includes('gas') || shopLower.includes('fuel') || shopLower.includes('shell') || shopLower.includes('exxon') || shopLower.includes('chevron')) {
       category = 'Transportation';
-    } else if (shopLower.includes('restaurant') || shopLower.includes('cafe') || shopLower.includes('pizza')) {
+    } else if (shopLower.includes('restaurant') || shopLower.includes('cafe') || shopLower.includes('pizza') || shopLower.includes('mcdonald') || shopLower.includes('subway')) {
       category = 'Food & Dining';
-    } else if (shopLower.includes('pharmacy') || shopLower.includes('cvs') || shopLower.includes('walgreens')) {
+    } else if (shopLower.includes('pharmacy') || shopLower.includes('cvs') || shopLower.includes('walgreens') || shopLower.includes('drug')) {
       category = 'Health';
+    } else if (shopLower.includes('home depot') || shopLower.includes('lowes') || shopLower.includes('hardware')) {
+      category = 'Home Improvement';
     }
     
     return {
-      shop: shop.length > 50 ? shop.substring(0, 50) : shop, // Limit length
-      amount: amount || Math.floor(Math.random() * 100) + 10, // Fallback to random if no amount found
+      shop: shop.length > 50 ? shop.substring(0, 50) : shop,
+      amount: amount || Math.floor(Math.random() * 100) + 10,
       date,
       category
     };
   };
 
-  // Fallback data generation if OCR fails
   const generateFallbackData = () => {
     const shops = ['Target', 'Starbucks', 'Uber Eats', 'Amazon', 'CVS Pharmacy', 'McDonald\'s', 'Home Depot', 'Best Buy'];
     const categories = ['Groceries', 'Food & Dining', 'Shopping', 'Transportation', 'Health', 'Entertainment', 'Home Improvement'];
@@ -248,27 +240,17 @@ const Budget = () => {
     setUploadStatus(`Processing ${selectedFiles.length} receipt(s) with OCR...`);
 
     try {
-      // Process each uploaded receipt with OCR
-      const newExpenses = [];
-      
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
         setUploadStatus(`Processing receipt ${i + 1} of ${selectedFiles.length}...`);
         
         const extractedData = await extractReceiptData(file);
-        newExpenses.push({
-          id: Date.now() + i,
-          ...extractedData
-        });
+        await addExpense(extractedData);
       }
 
-      // Add new expenses to current month
-      setCurrentMonthExpenses(prevExpenses => [...prevExpenses, ...newExpenses]);
-
       setUploadStatus(`Successfully processed ${selectedFiles.length} receipt(s) and logged expenses.`);
-      setSelectedFiles([]); // Clear selected files after processing
+      setSelectedFiles([]);
 
-      // Clear status after 5 seconds
       setTimeout(() => setUploadStatus(''), 5000);
     } catch (error) {
       console.error('Upload processing error:', error);
@@ -281,8 +263,25 @@ const Budget = () => {
     fileInputRef.current?.click();
   };
 
-  // Find current month budget data if it exists in history, otherwise use static placeholder
-  const currentMonthData = useMemo(() => currentMonth, [currentMonth]);
+  if (!user) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto py-8 text-center">
+          <p>Please log in to view your budget.</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto py-8 text-center">
+          <p>Loading your budget data...</p>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -292,22 +291,22 @@ const Budget = () => {
           {/* Current Month Budget Summary */}
           <Card>
             <CardHeader>
-              <CardTitle>Current Month: {currentMonthData.period}</CardTitle>
+              <CardTitle>Current Month: {currentPeriodName}</CardTitle>
               <CardDescription>Overview of your current month's budget.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                 <div className="p-3 border rounded-md">
                   <p className="text-muted-foreground text-sm">Total Income</p>
-                  <p className="text-xl font-semibold text-green-600">${currentMonthData.totalIncome}</p>
+                  <p className="text-xl font-semibold text-green-600">${currentBudgetPeriod?.total_income || 0}</p>
                 </div>
                 <div className="p-3 border rounded-md">
                   <p className="text-muted-foreground text-sm">Total Expenses</p>
-                  <p className="text-xl font-semibold text-red-600">${currentMonthData.totalExpenses.toFixed(2)}</p>
+                  <p className="text-xl font-semibold text-red-600">${currentBudgetPeriod?.total_expenses || 0}</p>
                 </div>
                 <div className="p-3 border rounded-md">
                   <p className="text-muted-foreground text-sm">Remaining Budget</p>
-                  <p className="text-xl font-semibold text-blue-600">${currentMonthData.remaining.toFixed(2)}</p>
+                  <p className="text-xl font-semibold text-blue-600">${currentBudgetPeriod?.remaining_budget || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -317,19 +316,23 @@ const Budget = () => {
           <Card>
             <CardHeader>
               <CardTitle>Current Month Expenses</CardTitle>
-              <CardDescription>Detailed list of your expenses for {currentMonthData.period}.</CardDescription>
+              <CardDescription>Detailed list of your expenses for {currentPeriodName}.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3 max-h-60 overflow-y-auto">
-                {currentMonthExpenses.map((expense) => (
-                  <div key={expense.id} className="flex justify-between items-center p-3 border rounded-md">
-                    <div>
-                      <p className="font-medium">{expense.shop}</p>
-                      <p className="text-sm text-muted-foreground">{expense.date} • {expense.category}</p>
+                {currentMonthExpenses.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">No expenses recorded yet.</p>
+                ) : (
+                  currentMonthExpenses.map((expense) => (
+                    <div key={expense.id} className="flex justify-between items-center p-3 border rounded-md">
+                      <div>
+                        <p className="font-medium">{expense.shop}</p>
+                        <p className="text-sm text-muted-foreground">{expense.date} • {expense.category}</p>
+                      </div>
+                      <p className="font-semibold">${expense.amount}</p>
                     </div>
-                    <p className="font-semibold">${expense.amount.toFixed(2)}</p>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -342,7 +345,6 @@ const Budget = () => {
             </CardHeader>
             <CardContent>
               <CardDescription className="mb-4">Add a new transaction to your budget.</CardDescription>
-              {/* Placeholder for expense logging form */}
               <div className="p-6 border border-dashed rounded-md text-muted-foreground text-center h-40 flex items-center justify-center">
                 Expense Logging Form Placeholder
               </div>
@@ -374,15 +376,19 @@ const Budget = () => {
 
               <CardDescription className="mb-4">View your budget and spending from previous periods.</CardDescription>
               <div className="space-y-3">
-                {displayedHistory.map((budget) => (
-                  <Link key={budget.id} to={`/budget/${budget.id}`} className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/50 transition-colors cursor-pointer">
-                    <div>
-                      <p className="font-semibold text-sm">{budget.period}</p>
-                      <p className="text-xs text-muted-foreground">Exp: ${budget.totalExpenses} | Inc: ${budget.totalIncome}</p>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  </Link>
-                ))}
+                {displayedHistory.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">No budget history found.</p>
+                ) : (
+                  displayedHistory.map((budget) => (
+                    <Link key={budget.id} to={`/budget/${budget.id}`} className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/50 transition-colors cursor-pointer">
+                      <div>
+                        <p className="font-semibold text-sm">{budget.period_name}</p>
+                        <p className="text-xs text-muted-foreground">Exp: ${budget.total_expenses} | Inc: ${budget.total_income}</p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                  ))
+                )}
               </div>
               {filteredHistory.length > displayedHistory.length && (
                  <Button variant="link" className="w-full mt-4" onClick={handleShowMore}>
@@ -429,8 +435,12 @@ const Budget = () => {
                 </div>
               )}
 
-               <Button onClick={handleUploadReceipts} disabled={selectedFiles.length === 0 || uploadStatus.startsWith('Processing...')} className="mt-4 w-full">
-                 Upload and Log Expenses
+               <Button 
+                 onClick={handleUploadReceipts} 
+                 disabled={selectedFiles.length === 0 || isAddingExpense || uploadStatus.startsWith('Processing')} 
+                 className="mt-4 w-full"
+               >
+                 {isAddingExpense ? 'Adding Expenses...' : 'Upload and Log Expenses'}
                </Button>
                {uploadStatus && (
                  <p className={`text-sm mt-2 text-center ${uploadStatus.includes('Successfully') ? 'text-green-600' : 'text-muted-foreground'}`}>

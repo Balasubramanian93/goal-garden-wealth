@@ -9,6 +9,78 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      budget_periods: {
+        Row: {
+          created_at: string
+          id: string
+          period: string
+          period_name: string
+          remaining_budget: number
+          total_expenses: number
+          total_income: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          period: string
+          period_name: string
+          remaining_budget?: number
+          total_expenses?: number
+          total_income?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          period?: string
+          period_name?: string
+          remaining_budget?: number
+          total_expenses?: number
+          total_income?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          id: string
+          month_year: string
+          shop: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          date: string
+          id?: string
+          month_year: string
+          shop: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          id?: string
+          month_year?: string
+          shop?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       goal_investments: {
         Row: {
           amount: number
@@ -179,6 +251,10 @@ export type Database = {
       increment_amount: {
         Args: { row_id: number; amount_to_add: number }
         Returns: number
+      }
+      update_budget_period_totals: {
+        Args: { period_id: string }
+        Returns: undefined
       }
     }
     Enums: {
