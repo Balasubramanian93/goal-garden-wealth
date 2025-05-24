@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
 import {
@@ -18,7 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label"; // Label is no longer needed
 
 const Budget = () => {
   // Placeholder data for budget history
@@ -40,10 +40,38 @@ const Budget = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadStatus, setUploadStatus] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // State for current month expenses
+  const [currentMonthExpenses, setCurrentMonthExpenses] = useState([
+    { id: 1, shop: 'Walmart', amount: 85.50, date: '2024-07-15', category: 'Groceries' },
+    { id: 2, shop: 'Shell Gas Station', amount: 45.00, date: '2024-07-14', category: 'Transportation' },
+    { id: 3, shop: 'Electric Company', amount: 120.00, date: '2024-07-12', category: 'Utilities' },
+  ]);
+
   // State to hold current month budget data, initialized from history or with defaults
-  const [currentMonth, setCurrentMonth] = useState(budgetHistory.find(item => item.id === '2024-07') || {
-    id: '2024-07', period: 'July 2024', year: '2024', totalExpenses: 1100, totalIncome: 3500, remaining: 2400
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const baseData = budgetHistory.find(item => item.id === '2024-07') || {
+      id: '2024-07', period: 'July 2024', year: '2024', totalExpenses: 1100, totalIncome: 3500, remaining: 2400
+    };
+    
+    // Calculate actual total from expenses
+    const actualTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    return {
+      ...baseData,
+      totalExpenses: actualTotal,
+      remaining: baseData.totalIncome - actualTotal
+    };
   });
+
+  // Update current month when expenses change
+  React.useEffect(() => {
+    const actualTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    setCurrentMonth(prev => ({
+      ...prev,
+      totalExpenses: actualTotal,
+      remaining: prev.totalIncome - actualTotal
+    }));
+  }, [currentMonthExpenses]);
 
   const uniqueYears = useMemo(() => {
     const years = [...new Set(budgetHistory.map(item => item.year))];
@@ -78,34 +106,58 @@ const Budget = () => {
     setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
   };
 
+  // Simulate receipt data extraction
+  const extractReceiptData = (file: File) => {
+    // Simulate different types of shops and expenses
+    const shops = ['Target', 'Starbucks', 'Uber Eats', 'Amazon', 'CVS Pharmacy', 'McDonald\'s', 'Home Depot', 'Best Buy'];
+    const categories = ['Groceries', 'Food & Dining', 'Shopping', 'Transportation', 'Health', 'Entertainment', 'Home Improvement'];
+    
+    const randomShop = shops[Math.floor(Math.random() * shops.length)];
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+    const randomAmount = Math.floor(Math.random() * 150) + 10; // Random amount between 10 and 160
+    
+    // Generate a recent date (within last 30 days)
+    const today = new Date();
+    const daysAgo = Math.floor(Math.random() * 30);
+    const expenseDate = new Date(today.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
+    const formattedDate = expenseDate.toISOString().split('T')[0];
+    
+    return {
+      shop: randomShop,
+      amount: randomAmount,
+      date: formattedDate,
+      category: randomCategory
+    };
+  };
+
   const handleUploadReceipts = () => {
     if (selectedFiles.length === 0) {
       setUploadStatus('Please select files first.');
       return;
     }
 
-    setUploadStatus(`Uploading ${selectedFiles.length} receipt(s)...`);
+    setUploadStatus(`Processing ${selectedFiles.length} receipt(s)...`);
 
-    // Simulate upload and processing for each file
-    // Placeholder expense data (will be different for each file in real implementation)
-    const placeholderExpenses = selectedFiles.map((file, index) => ({
-      category: ['Food', 'Transportation', 'Utilities'][index % 3],
-      amount: Math.floor(Math.random() * 100) + 20, // Random amount between 20 and 120
-    }));
-    const totalNewExpenses = placeholderExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-
+    // Simulate processing time
     setTimeout(() => {
-      setUploadStatus('Upload simulation complete. Data will be processed shortly.');
+      // Extract data from each uploaded receipt
+      const newExpenses = selectedFiles.map((file, index) => {
+        const extractedData = extractReceiptData(file);
+        return {
+          id: Date.now() + index, // Simple ID generation
+          ...extractedData
+        };
+      });
 
-      // Update the current month's total expenses and remaining budget
-      setCurrentMonth(prevMonth => ({
-        ...prevMonth,
-        totalExpenses: prevMonth.totalExpenses + totalNewExpenses,
-        remaining: prevMonth.remaining - totalNewExpenses,
-      }));
+      // Add new expenses to current month
+      setCurrentMonthExpenses(prevExpenses => [...prevExpenses, ...newExpenses]);
 
-      setSelectedFiles([]); // Clear selected files after simulated upload
-    }, 2000); // Simulate a 2-second upload time
+      setUploadStatus(`Successfully logged ${selectedFiles.length} expense(s) to current month.`);
+      setSelectedFiles([]); // Clear selected files after processing
+
+      // Clear status after 3 seconds
+      setTimeout(() => setUploadStatus(''), 3000);
+    }, 2000); // Simulate 2-second processing time
   };
 
   const handleUploadIconClick = () => {
@@ -134,12 +186,33 @@ const Budget = () => {
                 </div>
                 <div className="p-3 border rounded-md">
                   <p className="text-muted-foreground text-sm">Total Expenses</p>
-                  <p className="text-xl font-semibold text-red-600">${currentMonthData.totalExpenses}</p>
+                  <p className="text-xl font-semibold text-red-600">${currentMonthData.totalExpenses.toFixed(2)}</p>
                 </div>
                 <div className="p-3 border rounded-md">
                   <p className="text-muted-foreground text-sm">Remaining Budget</p>
-                  <p className="text-xl font-semibold text-blue-600">${currentMonthData.remaining}</p>
+                  <p className="text-xl font-semibold text-blue-600">${currentMonthData.remaining.toFixed(2)}</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Current Month Expenses List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Month Expenses</CardTitle>
+              <CardDescription>Detailed list of your expenses for {currentMonthData.period}.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {currentMonthExpenses.map((expense) => (
+                  <div key={expense.id} className="flex justify-between items-center p-3 border rounded-md">
+                    <div>
+                      <p className="font-medium">{expense.shop}</p>
+                      <p className="text-sm text-muted-foreground">{expense.date} • {expense.category}</p>
+                    </div>
+                    <p className="font-semibold">${expense.amount.toFixed(2)}</p>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -205,7 +278,6 @@ const Budget = () => {
            {/* Receipt Upload */}
            <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-               {/* Removed CardTitle and replaced with descriptive text in CardDescription */}
                <CardDescription className="text-lg font-semibold text-primary">Upload Receipts</CardDescription>
                <Upload className="h-8 w-8 text-muted-foreground cursor-pointer" onClick={handleUploadIconClick} />
             </CardHeader>
@@ -218,7 +290,7 @@ const Budget = () => {
                  multiple 
                  onChange={handleFileChange} 
                  ref={fileInputRef}
-                 className="hidden" // Hide the file input
+                 className="hidden"
               />
 
               {selectedFiles.length > 0 && (
@@ -228,7 +300,6 @@ const Budget = () => {
                     {selectedFiles.map((file, index) => (
                       <div key={index} className="relative flex items-center justify-between p-2 border rounded-md">
                         <div className="flex items-center">
-                           {/* Using URL.createObjectURL for local preview */}
                            <img src={URL.createObjectURL(file)} alt={file.name} className="w-10 h-10 object-cover rounded-md mr-2" />
                            <span className="text-sm truncate">{file.name}</span>
                         </div>
@@ -241,10 +312,14 @@ const Budget = () => {
                 </div>
               )}
 
-               <Button onClick={handleUploadReceipts} disabled={selectedFiles.length === 0 || uploadStatus.startsWith('Uploading...')} className="mt-4 w-full">
+               <Button onClick={handleUploadReceipts} disabled={selectedFiles.length === 0 || uploadStatus.startsWith('Processing...')} className="mt-4 w-full">
                  Upload and Log Expenses
                </Button>
-               {uploadStatus && <p className="text-sm mt-2 text-center text-muted-foreground">{uploadStatus}</p>}
+               {uploadStatus && (
+                 <p className={`text-sm mt-2 text-center ${uploadStatus.includes('Successfully') ? 'text-green-600' : 'text-muted-foreground'}`}>
+                   {uploadStatus}
+                 </p>
+               )}
             </CardContent>
           </Card>
         </div>
@@ -254,22 +329,3 @@ const Budget = () => {
 };
 
 export default Budget;
-
-// Feature Card Component (kept for consistency if needed elsewhere, though not used directly here anymore)
-// const FeatureCard = ({ 
-//   icon, 
-//   title, 
-//   description 
-// }: { 
-//   icon: React.ReactNode; 
-//   title: string; 
-//   description: string;
-// }) => {
-//   return (
-//     <div className="flex flex-col items-center text-center p-6 bg-card rounded-lg border shadow-sm">
-//       <div className="text-primary mb-4">{icon}</div>
-//       <h3 className="text-xl font-bold mb-2">{title}</h3>
-//       <p className="text-muted-foreground">{description}</p>
-//     </div>
-//   );
-// };
