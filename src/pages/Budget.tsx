@@ -1,37 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Link } from "react-router-dom";
-import { PlusCircle, History, ChevronRight, Upload, XCircle, Edit } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlusCircle } from 'lucide-react';
 import Tesseract from 'tesseract.js';
 import { useBudget } from '@/hooks/useBudget';
 import { useAuth } from '@/contexts/AuthContext';
 import { budgetService } from '@/services/budgetService';
 import { toast } from '@/hooks/use-toast';
+import BudgetSummaryCard from '@/components/budget/BudgetSummaryCard';
+import ExpensesList from '@/components/budget/ExpensesList';
+import BudgetHistoryCard from '@/components/budget/BudgetHistoryCard';
+import ReceiptUploadCard from '@/components/budget/ReceiptUploadCard';
+import EditIncomeDialog from '@/components/budget/EditIncomeDialog';
 
 const Budget = () => {
   const { user } = useAuth();
@@ -334,6 +314,16 @@ const Budget = () => {
     fileInputRef.current?.click();
   };
 
+  const handleUpdateExpense = async (expenseId: string, newAmount: number) => {
+    // This would need to be implemented in the budget service
+    console.log('Update expense:', expenseId, 'to amount:', newAmount);
+    // For now, just show a toast that this feature would be implemented
+    toast({
+      title: "Feature coming soon",
+      description: "Expense editing will be available in a future update.",
+    });
+  };
+
   if (!user) {
     return (
       <MainLayout>
@@ -360,117 +350,20 @@ const Budget = () => {
         {/* Left Column - Current Month Summary and Log Expense */}
         <div className="md:col-span-2 flex flex-col gap-6">
           {/* Current Month Budget Summary */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div>
-                <CardTitle>Current Month: {currentPeriodName}</CardTitle>
-                <CardDescription>Overview of your current month's budget.</CardDescription>
-              </div>
-              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Edit Monthly Budget</DialogTitle>
-                    <DialogDescription>
-                      Update your monthly income. Total expenses and remaining budget are calculated automatically.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <label htmlFor="income" className="text-right font-medium">
-                        Total Income
-                      </label>
-                      <Input
-                        id="income"
-                        type="text"
-                        value={editIncome}
-                        onChange={(e) => setEditIncome(e.target.value)}
-                        className="col-span-3"
-                        placeholder="Enter monthly income"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <label className="text-right text-muted-foreground">
-                        Total Expenses
-                      </label>
-                      <div className="col-span-3 p-2 bg-muted rounded">
-                        ${currentBudgetPeriod?.total_expenses || 0}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <label className="text-right text-muted-foreground">
-                        Remaining Budget
-                      </label>
-                      <div className="col-span-3 p-2 bg-muted rounded">
-                        ${(parseFloat(editIncome) || 0) - (currentBudgetPeriod?.total_expenses || 0)}
-                      </div>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button 
-                      onClick={handleEditIncome} 
-                      disabled={isUpdatingIncome}
-                    >
-                      {isUpdatingIncome ? 'Updating...' : 'Update Income'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                <div className="p-3 border rounded-md">
-                  <p className="text-muted-foreground text-sm">Total Income</p>
-                  <p className="text-xl font-semibold text-green-600">${currentBudgetPeriod?.total_income || 0}</p>
-                </div>
-                <div className="p-3 border rounded-md">
-                  <p className="text-muted-foreground text-sm">Total Expenses</p>
-                  <p className="text-xl font-semibold text-red-600">${currentBudgetPeriod?.total_expenses || 0}</p>
-                </div>
-                <div className="p-3 border rounded-md">
-                  <p className="text-muted-foreground text-sm">Remaining Budget</p>
-                  <p className="text-xl font-semibold text-blue-600">${currentBudgetPeriod?.remaining_budget || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <BudgetSummaryCard
+            currentPeriodName={currentPeriodName}
+            currentBudgetPeriod={currentBudgetPeriod}
+            onEditClick={() => setIsEditDialogOpen(true)}
+          />
 
           {/* Current Month Expenses List */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Month Expenses</CardTitle>
-              <CardDescription>Detailed list of your expenses for {currentPeriodName}.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 max-h-60 overflow-y-auto">
-                {currentMonthExpenses.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No expenses recorded yet.</p>
-                ) : (
-                  <>
-                    {displayedExpenses.map((expense) => (
-                      <div key={expense.id} className="flex justify-between items-center p-3 border rounded-md">
-                        <div>
-                          <p className="font-medium">{expense.shop}</p>
-                          <p className="text-sm text-muted-foreground">{expense.date} • {expense.category}</p>
-                        </div>
-                        <p className="font-semibold">${expense.amount}</p>
-                      </div>
-                    ))}
-                    {currentMonthExpenses.length > displayedExpenses.length && (
-                      <Button variant="link" className="w-full mt-4" onClick={handleShowMoreExpenses}>
-                        Show More
-                      </Button>
-                    )}
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <ExpensesList
+            currentPeriodName={currentPeriodName}
+            currentMonthExpenses={currentMonthExpenses}
+            displayedExpenses={displayedExpenses}
+            onShowMore={handleShowMoreExpenses}
+            onUpdateExpense={handleUpdateExpense}
+          />
 
           {/* Log New Expense (Placeholder) */}
           <Card>
@@ -490,102 +383,39 @@ const Budget = () => {
         {/* Right Column - Budget History and Receipt Upload */}
         <div className="md:col-span-1 flex flex-col gap-6">
           {/* Budget History */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-semibold">Budget History</CardTitle>
-              <History className="h-6 w-6 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-               <div className="mb-4">
-                 <Select onValueChange={setSelectedYear} defaultValue={selectedYear}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select Year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {uniqueYears.map(year => (
-                         <SelectItem key={year} value={year}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                 </Select>
-               </div>
+          <BudgetHistoryCard
+            uniqueYears={uniqueYears}
+            selectedYear={selectedYear}
+            onYearChange={setSelectedYear}
+            displayedHistory={displayedHistory}
+            filteredHistory={filteredHistory}
+            onShowMore={handleShowMore}
+          />
 
-              <CardDescription className="mb-4">View your budget and spending from previous periods.</CardDescription>
-              <div className="space-y-3">
-                {displayedHistory.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No budget history found.</p>
-                ) : (
-                  displayedHistory.map((budget) => (
-                    <Link key={budget.id} to={`/budget/${budget.id}`} className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/50 transition-colors cursor-pointer">
-                      <div>
-                        <p className="font-semibold text-sm">{budget.period_name}</p>
-                        <p className="text-xs text-muted-foreground">Exp: ${budget.total_expenses} | Inc: ${budget.total_income}</p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </Link>
-                  ))
-                )}
-              </div>
-              {filteredHistory.length > displayedHistory.length && (
-                 <Button variant="link" className="w-full mt-4" onClick={handleShowMore}>
-                    Show More
-                 </Button>
-              )}
-            </CardContent>
-          </Card>
-
-           {/* Receipt Upload */}
-           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-               <CardDescription className="text-lg font-semibold text-primary">Upload Receipts</CardDescription>
-               <Upload className="h-8 w-8 text-muted-foreground cursor-pointer" onClick={handleUploadIconClick} />
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="mb-4">Click the upload icon above to add receipts.</CardDescription>
-              <input 
-                 id="receipts" 
-                 type="file" 
-                 accept="image/*" 
-                 multiple 
-                 onChange={handleFileChange} 
-                 ref={fileInputRef}
-                 className="hidden"
-              />
-
-              {selectedFiles.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium">Selected Files:</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="relative flex items-center justify-between p-2 border rounded-md">
-                        <div className="flex items-center">
-                           <img src={URL.createObjectURL(file)} alt={file.name} className="w-10 h-10 object-cover rounded-md mr-2" />
-                           <span className="text-sm truncate">{file.name}</span>
-                        </div>
-                        <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-5 w-5 p-0" onClick={() => handleRemoveFile(file)}>
-                           <XCircle className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-               <Button 
-                 onClick={handleUploadReceipts} 
-                 disabled={selectedFiles.length === 0 || isAddingExpense || uploadStatus.startsWith('Processing')} 
-                 className="mt-4 w-full"
-               >
-                 {isAddingExpense ? 'Adding Expenses...' : 'Upload and Log Expenses'}
-               </Button>
-               {uploadStatus && (
-                 <p className={`text-sm mt-2 text-center ${uploadStatus.includes('Successfully') ? 'text-green-600' : 'text-muted-foreground'}`}>
-                   {uploadStatus}
-                 </p>
-               )}
-            </CardContent>
-          </Card>
+          {/* Receipt Upload */}
+          <ReceiptUploadCard
+            selectedFiles={selectedFiles}
+            uploadStatus={uploadStatus}
+            isAddingExpense={isAddingExpense}
+            onUploadIconClick={handleUploadIconClick}
+            onFileChange={handleFileChange}
+            onRemoveFile={handleRemoveFile}
+            onUploadReceipts={handleUploadReceipts}
+            fileInputRef={fileInputRef}
+          />
         </div>
       </div>
+
+      {/* Edit Income Dialog */}
+      <EditIncomeDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        editIncome={editIncome}
+        onIncomeChange={setEditIncome}
+        currentBudgetPeriod={currentBudgetPeriod}
+        onSave={handleEditIncome}
+        isUpdating={isUpdatingIncome}
+      />
     </MainLayout>
   );
 };

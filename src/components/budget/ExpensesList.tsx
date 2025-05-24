@@ -1,0 +1,55 @@
+
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Expense } from '@/services/budgetService';
+import ExpenseItem from './ExpenseItem';
+
+interface ExpensesListProps {
+  currentPeriodName: string;
+  currentMonthExpenses: Expense[];
+  displayedExpenses: Expense[];
+  onShowMore: () => void;
+  onUpdateExpense?: (expenseId: string, newAmount: number) => void;
+}
+
+const ExpensesList = ({ 
+  currentPeriodName, 
+  currentMonthExpenses, 
+  displayedExpenses, 
+  onShowMore,
+  onUpdateExpense 
+}: ExpensesListProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Current Month Expenses</CardTitle>
+        <CardDescription>Detailed list of your expenses for {currentPeriodName}.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3 max-h-60 overflow-y-auto">
+          {currentMonthExpenses.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">No expenses recorded yet.</p>
+          ) : (
+            <>
+              {displayedExpenses.map((expense) => (
+                <ExpenseItem 
+                  key={expense.id} 
+                  expense={expense} 
+                  onUpdate={onUpdateExpense}
+                />
+              ))}
+              {currentMonthExpenses.length > displayedExpenses.length && (
+                <Button variant="link" className="w-full mt-4" onClick={onShowMore}>
+                  Show More
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ExpensesList;
