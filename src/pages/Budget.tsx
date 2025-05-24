@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,10 +82,10 @@ const Budget = () => {
     setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
   };
 
-  // Enhanced OCR function to extract final total after tax
+  // Enhanced OCR function with detailed item processing
   const extractReceiptData = async (file: File) => {
     try {
-      console.log('Starting OCR processing for:', file.name);
+      console.log('Starting detailed OCR processing for:', file.name);
       
       const { data: { text } } = await Tesseract.recognize(file, 'eng', {
         logger: m => console.log(m)
@@ -95,7 +94,7 @@ const Budget = () => {
       console.log('OCR extracted text:', text);
       
       const parsedData = parseReceiptText(text);
-      return parsedData;
+      return { ...parsedData, ocrText: text };
     } catch (error) {
       console.error('OCR Error:', error);
       return generateFallbackData();
@@ -285,13 +284,14 @@ const Budget = () => {
     }
   }, [currentBudgetPeriod]);
 
+  // Enhanced receipt upload with detailed processing
   const handleUploadReceipts = async () => {
     if (selectedFiles.length === 0) {
       setUploadStatus('Please select files first.');
       return;
     }
 
-    setUploadStatus(`Processing ${selectedFiles.length} receipt(s) with OCR...`);
+    setUploadStatus(`Processing ${selectedFiles.length} receipt(s) with detailed OCR analysis...`);
 
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
@@ -299,10 +299,23 @@ const Budget = () => {
         setUploadStatus(`Processing receipt ${i + 1} of ${selectedFiles.length}...`);
         
         const extractedData = await extractReceiptData(file);
-        await addExpense(extractedData);
+        
+        // Use the enhanced processing if OCR text is available
+        if (extractedData.ocrText) {
+          await budgetService.processDetailedReceipt(file, extractedData.ocrText, {
+            shop: extractedData.shop,
+            amount: extractedData.amount,
+            date: extractedData.date,
+            category: extractedData.category,
+            month_year: new Date().toISOString().slice(0, 7)
+          });
+        } else {
+          // Fallback to simple expense
+          await addExpense(extractedData);
+        }
       }
 
-      setUploadStatus(`Successfully processed ${selectedFiles.length} receipt(s) and logged expenses.`);
+      setUploadStatus(`Successfully processed ${selectedFiles.length} receipt(s) with detailed item categorization.`);
       setSelectedFiles([]);
 
       setTimeout(() => setUploadStatus(''), 5000);

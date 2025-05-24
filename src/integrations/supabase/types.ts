@@ -45,6 +45,54 @@ export type Database = {
         }
         Relationships: []
       }
+      category_spending: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          expense_id: string | null
+          id: string
+          month_year: string
+          receipt_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          expense_id?: string | null
+          id?: string
+          month_year: string
+          receipt_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          expense_id?: string | null
+          id?: string
+          month_year?: string
+          receipt_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_spending_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_spending_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number
@@ -53,6 +101,7 @@ export type Database = {
           date: string
           id: string
           month_year: string
+          receipt_id: string | null
           shop: string
           updated_at: string
           user_id: string
@@ -64,6 +113,7 @@ export type Database = {
           date: string
           id?: string
           month_year: string
+          receipt_id?: string | null
           shop: string
           updated_at?: string
           user_id: string
@@ -75,11 +125,20 @@ export type Database = {
           date?: string
           id?: string
           month_year?: string
+          receipt_id?: string | null
           shop?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expenses_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       goal_investments: {
         Row: {
@@ -221,6 +280,86 @@ export type Database = {
           id?: string
           last_name?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      receipt_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          item_name: string
+          item_price: number
+          quantity: number | null
+          receipt_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          item_name: string
+          item_price: number
+          quantity?: number | null
+          receipt_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          item_name?: string
+          item_price?: number
+          quantity?: number | null
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipt_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      receipts: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          processed_at: string | null
+          receipt_date: string | null
+          store_name: string | null
+          total_amount: number
+          updated_at: string
+          upload_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          processed_at?: string | null
+          receipt_date?: string | null
+          store_name?: string | null
+          total_amount: number
+          updated_at?: string
+          upload_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          processed_at?: string | null
+          receipt_date?: string | null
+          store_name?: string | null
+          total_amount?: number
+          updated_at?: string
+          upload_date?: string
+          user_id?: string
         }
         Relationships: []
       }

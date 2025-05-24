@@ -2,19 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit, Check, X, Trash2 } from 'lucide-react';
+import { Edit3, Trash2, Check, X, Receipt } from 'lucide-react';
 import { Expense } from '@/services/budgetService';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import ReceiptDetailsDialog from './ReceiptDetailsDialog';
 
 interface ExpenseItemProps {
   expense: Expense;
@@ -26,13 +16,14 @@ interface ExpenseItemProps {
 const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editAmount, setEditAmount] = useState(expense.amount.toString());
+  const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
 
   const handleSave = () => {
-    const amount = parseFloat(editAmount);
-    if (!isNaN(amount) && amount >= 0 && onUpdate) {
-      onUpdate(expense.id, amount);
+    const newAmount = parseFloat(editAmount);
+    if (!isNaN(newAmount) && newAmount > 0 && onUpdate) {
+      onUpdate(expense.id, newAmount);
+      setIsEditing(false);
     }
-    setIsEditing(false);
   };
 
   const handleCancel = () => {
@@ -41,76 +32,100 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
   };
 
   const handleDelete = () => {
-    if (onDelete) {
+    if (onDelete && window.confirm('Are you sure you want to delete this expense?')) {
       onDelete(expense.id);
     }
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
-    <div className="flex justify-between items-center p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
-      <div className="flex-1">
-        <p className="font-medium text-foreground">{expense.shop}</p>
-        <p className="text-sm text-muted-foreground">
-          {expense.date} • <span className="text-primary font-medium">{expense.category}</span>
-        </p>
-      </div>
-      <div className="flex items-center gap-2">
-        {isEditing ? (
-          <>
-            <Input
-              type="number"
-              step="0.01"
-              value={editAmount}
-              onChange={(e) => setEditAmount(e.target.value)}
-              className="w-24 h-8"
-            />
-            <Button size="sm" variant="ghost" onClick={handleSave} className="hover:bg-green-100 hover:text-green-700">
-              <Check className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost" onClick={handleCancel} className="hover:bg-red-100 hover:text-red-700">
-              <X className="h-4 w-4" />
-            </Button>
-          </>
-        ) : (
-          <>
-            <p className="font-semibold text-lg min-w-[80px] text-right">${expense.amount.toFixed(2)}</p>
-            <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)} className="hover:bg-blue-100 hover:text-blue-700">
-              <Edit className="h-4 w-4" />
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="hover:bg-red-100 hover:text-red-700"
-                  disabled={isDeleting}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Expense</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete this expense from {expense.shop} for ${expense.amount.toFixed(2)}? 
-                    This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={handleDelete}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+    <>
+      <div className="flex items-center justify-between p-3 border rounded-md hover:bg-accent/50 transition-colors">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="font-medium truncate">{expense.shop}</p>
+                {expense.receipt_id && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => setIsReceiptDialogOpen(true)}
+                    title="View receipt details"
                   >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </>
-        )}
+                    <Receipt className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>{expense.category}</span>
+                <span>•</span>
+                <span>{formatDate(expense.date)}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">$</span>
+                  <Input
+                    type="number"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    className="w-20 h-8"
+                    step="0.01"
+                    autoFocus
+                  />
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={handleSave}>
+                    <Check className="h-4 w-4 text-green-600" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={handleCancel}>
+                    <X className="h-4 w-4 text-red-600" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">${expense.amount.toFixed(2)}</span>
+                  {onUpdate && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-8 w-8 p-0" 
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Edit3 className="h-3 w-3" />
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-8 w-8 p-0" 
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <ReceiptDetailsDialog
+        isOpen={isReceiptDialogOpen}
+        onOpenChange={setIsReceiptDialogOpen}
+        receiptId={expense.receipt_id}
+      />
+    </>
   );
 };
 
