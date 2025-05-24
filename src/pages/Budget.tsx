@@ -88,10 +88,7 @@ const Budget = () => {
       console.log('Starting enhanced OCR processing for:', file.name);
       
       const { data: { text } } = await Tesseract.recognize(file, 'eng', {
-        logger: m => console.log(m),
-        // Better OCR settings for receipt processing
-        tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
-        preserve_interword_spaces: '1',
+        logger: m => console.log(m)
       });
       
       console.log('Raw OCR text:', text);
