@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,6 +28,10 @@ import HRACalculatorPage from "./pages/calculators/HRACalculatorPage";
 import SSYCalculatorPage from "./pages/calculators/SSYCalculatorPage";
 import MFCalculatorPage from "./pages/calculators/MFCalculatorPage";
 import IRRCalculatorPage from "./pages/calculators/IRRCalculatorPage";
+import Blogs from "./pages/Blogs";
+import Budget from "./pages/Budget";
+import BudgetDetail from "./pages/BudgetDetail";
+import MainLayout from "./components/layout/MainLayout";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +45,7 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/blogs" element={<MainLayout><Blogs /></MainLayout>} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/tools" element={<Tools />} />
@@ -97,6 +101,22 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Analytics />
+                  </ProtectedRoute>
+                } 
+              />
+               <Route 
+                path="/budget" 
+                element={
+                  <ProtectedRoute>
+                    <Budget />
+                  </ProtectedRoute>
+                } 
+              />
+               <Route 
+                path="/budget/:budgetId" 
+                element={
+                  <ProtectedRoute>
+                    <BudgetDetail />
                   </ProtectedRoute>
                 } 
               />

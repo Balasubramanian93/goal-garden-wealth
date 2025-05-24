@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -17,11 +16,11 @@ import {
   Briefcase,
   Mail,
   Moon,
-  Sun
+  Sun, Home, Wallet
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { 
+import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
@@ -53,6 +52,16 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
+            {!isAuthenticated && (
+              <Link to="/" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
+                <Home className="h-4 w-4" />
+                Home
+              </Link>
+            )}
+            <Link to="/blogs" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
+              <Newspaper className="h-4 w-4" />
+              Blogs
+            </Link>
             {isAuthenticated && (
               <>
                 <Link to="/portfolio" className="text-sm font-medium hover:text-primary transition-colors">
@@ -63,6 +72,10 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 </Link>
                 <Link to="/analytics" className="text-sm font-medium hover:text-primary transition-colors">
                   Analytics
+                </Link>
+                 <Link to="/budget" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
+                  <Wallet className="h-4 w-4" />
+                  Budget
                 </Link>
               </>
             )}
