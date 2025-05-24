@@ -83,7 +83,7 @@ const Budget = () => {
   };
 
   // Enhanced OCR function with detailed item processing
-  const extractReceiptData = async (file: File) => {
+  const extractReceiptData = async (file: File): Promise<{ shop: string; amount: number; date: string; category: string; ocrText?: string }> => {
     try {
       console.log('Starting detailed OCR processing for:', file.name);
       
@@ -301,7 +301,7 @@ const Budget = () => {
         const extractedData = await extractReceiptData(file);
         
         // Use the enhanced processing if OCR text is available
-        if (extractedData.ocrText) {
+        if ('ocrText' in extractedData && extractedData.ocrText) {
           await budgetService.processDetailedReceipt(file, extractedData.ocrText, {
             shop: extractedData.shop,
             amount: extractedData.amount,
