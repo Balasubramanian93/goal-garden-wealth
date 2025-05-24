@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,14 +45,14 @@ const ReceiptUploadCard = ({
         {selectedFiles.length > 0 && (
           <div className="mt-4 space-y-2">
             <p className="text-sm font-medium">Selected Files:</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2">
               {selectedFiles.map((file, index) => (
                 <div key={index} className="relative flex items-center justify-between p-2 border rounded-md">
-                  <div className="flex items-center">
+                  <div className="flex items-center max-w-[200px]">
                     <img src={URL.createObjectURL(file)} alt={file.name} className="w-10 h-10 object-cover rounded-md mr-2" />
-                    <span className="text-sm truncate">{file.name}</span>
+                    <span className="text-sm truncate max-w-[150px]">{file.name}</span>
                   </div>
-                  <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-5 w-5 p-0" onClick={() => onRemoveFile(file)}>
+                  <Button variant="ghost" size="sm" className="absolute top-1/2 right-1 h-5 w-5 p-0 transform -translate-y-1/2" onClick={() => onRemoveFile(file)}>
                     <XCircle className="h-4 w-4" />
                   </Button>
                 </div>

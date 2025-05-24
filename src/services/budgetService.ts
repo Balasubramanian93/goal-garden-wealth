@@ -105,12 +105,15 @@ export const budgetService = {
     // Parse items from OCR text
     const items = this.parseReceiptItems(ocrText, receipt.id);
     
+    console.log('Processing detailed receipt, items parsed:', items.length);
+
     if (items.length > 0) {
       // Create receipt items
       await receiptService.createReceiptItems(items);
 
       // Create category spending records
       const categoryTotals = this.calculateCategoryTotals(items, user.id, expenseData.month_year, receipt.id);
+      console.log('Category totals calculated:', categoryTotals);
       await receiptService.createCategorySpending(categoryTotals);
     }
 
@@ -144,7 +147,7 @@ export const budgetService = {
   // Enhanced receipt parsing with better validation
   parseReceiptItems(ocrText: string, receiptId: string) {
     const cleanedText = this.cleanOcrText(ocrText);
-    const lines = cleanedText.split('\n').map(line => line.trim()).filter(line => line.length > 2);
+    const lines = cleanedText.split('').map(line => line.trim()).filter(line => line.length > 2);
     const items: Omit<any, 'id' | 'created_at'>[] = [];
 
     console.log('Parsing OCR text:', cleanedText);
@@ -219,7 +222,7 @@ export const budgetService = {
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim()
       .toLowerCase()
-      .replace(/\b\w/g, l => l.toUpperCase()); // Title case
+      .replace(/ \w/g, l => l.toUpperCase()); // Title case
   },
 
   // Calculate category totals from items
