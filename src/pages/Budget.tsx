@@ -46,6 +46,7 @@ const Budget = () => {
   } = useBudget();
 
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(3);
+  const [visibleExpensesCount, setVisibleExpensesCount] = useState(3);
   const [selectedYear, setSelectedYear] = useState('All');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadStatus, setUploadStatus] = useState('');
@@ -71,8 +72,16 @@ const Budget = () => {
     return filteredHistory.slice(0, visibleHistoryCount);
   }, [filteredHistory, visibleHistoryCount]);
 
+  const displayedExpenses = React.useMemo(() => {
+    return currentMonthExpenses.slice(0, visibleExpensesCount);
+  }, [currentMonthExpenses, visibleExpensesCount]);
+
   const handleShowMore = () => {
     setVisibleHistoryCount(prevCount => prevCount + 3);
+  };
+
+  const handleShowMoreExpenses = () => {
+    setVisibleExpensesCount(prevCount => prevCount + 3);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -248,9 +257,20 @@ const Budget = () => {
   const handleEditIncome = async () => {
     if (!currentBudgetPeriod) return;
 
+    // Parse the income value as a number
+    const incomeValue = parseFloat(editIncome.toString());
+    if (isNaN(incomeValue) || incomeValue < 0) {
+      toast({
+        title: "Invalid income",
+        description: "Please enter a valid positive number for income.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUpdatingIncome(true);
     try {
-      await budgetService.updateBudgetIncome(currentBudgetPeriod.id, editIncome);
+      await budgetService.updateBudgetIncome(currentBudgetPeriod.id, incomeValue);
       
       // Update budget period totals after income change
       await budgetService.updateBudgetPeriodTotals(currentBudgetPeriod.id);
@@ -367,9 +387,9 @@ const Budget = () => {
                       </label>
                       <Input
                         id="income"
-                        type="number"
+                        type="text"
                         value={editIncome}
-                        onChange={(e) => setEditIncome(Number(e.target.value))}
+                        onChange={(e) => setEditIncome(e.target.value)}
                         className="col-span-3"
                         placeholder="Enter monthly income"
                       />
@@ -387,7 +407,7 @@ const Budget = () => {
                         Remaining Budget
                       </label>
                       <div className="col-span-3 p-2 bg-muted rounded">
-                        ${editIncome - (currentBudgetPeriod?.total_expenses || 0)}
+                        ${(parseFloat(editIncome.toString()) || 0) - (currentBudgetPeriod?.total_expenses || 0)}
                       </div>
                     </div>
                   </div>
@@ -431,15 +451,22 @@ const Budget = () => {
                 {currentMonthExpenses.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">No expenses recorded yet.</p>
                 ) : (
-                  currentMonthExpenses.map((expense) => (
-                    <div key={expense.id} className="flex justify-between items-center p-3 border rounded-md">
-                      <div>
-                        <p className="font-medium">{expense.shop}</p>
-                        <p className="text-sm text-muted-foreground">{expense.date} • {expense.category}</p>
+                  <>
+                    {displayedExpenses.map((expense) => (
+                      <div key={expense.id} className="flex justify-between items-center p-3 border rounded-md">
+                        <div>
+                          <p className="font-medium">{expense.shop}</p>
+                          <p className="text-sm text-muted-foreground">{expense.date} • {expense.category}</p>
+                        </div>
+                        <p className="font-semibold">${expense.amount}</p>
                       </div>
-                      <p className="font-semibold">${expense.amount}</p>
-                    </div>
-                  ))
+                    ))}
+                    {currentMonthExpenses.length > displayedExpenses.length && (
+                      <Button variant="link" className="w-full mt-4" onClick={handleShowMoreExpenses}>
+                        Show More
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             </CardContent>
