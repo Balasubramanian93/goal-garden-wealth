@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +14,7 @@ import BudgetHistoryCard from '@/components/budget/BudgetHistoryCard';
 import ReceiptUploadCard from '@/components/budget/ReceiptUploadCard';
 import EditIncomeDialog from '@/components/budget/EditIncomeDialog';
 import AddExpenseDialog from '@/components/budget/AddExpenseDialog';
+import ExpenseCategoriesChart from '@/components/budget/ExpenseCategoriesChart';
 
 const Budget = () => {
   const { user } = useAuth();
@@ -362,6 +364,12 @@ const Budget = () => {
             currentPeriodName={currentPeriodName}
             currentBudgetPeriod={currentBudgetPeriod}
             onEditClick={() => setIsEditDialogOpen(true)}
+          />
+
+          {/* Expense Categories Chart */}
+          <ExpenseCategoriesChart
+            expenses={currentMonthExpenses}
+            currentPeriodName={currentPeriodName}
           />
 
           {/* Current Month Expenses List */}
