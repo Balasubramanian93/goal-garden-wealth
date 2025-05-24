@@ -39,21 +39,22 @@ export const useBudget = () => {
     enabled: !!user,
   });
 
+  const invalidateQueries = async () => {
+    queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthYear] });
+    
+    if (currentBudgetPeriod) {
+      await budgetService.updateBudgetPeriodTotals(currentBudgetPeriod.id);
+      queryClient.invalidateQueries({ queryKey: ['current-budget-period', currentMonthYear] });
+      queryClient.invalidateQueries({ queryKey: ['budget-periods'] });
+    }
+  };
+
   // Add expense mutation
   const addExpenseMutation = useMutation({
     mutationFn: (expense: Omit<Expense, 'id' | 'created_at' | 'updated_at'>) => 
       budgetService.addExpense(expense),
     onSuccess: async () => {
-      // Refresh expenses
-      queryClient.invalidateQueries({ queryKey: ['expenses', currentMonthYear] });
-      
-      // Update budget period totals
-      if (currentBudgetPeriod) {
-        await budgetService.updateBudgetPeriodTotals(currentBudgetPeriod.id);
-        queryClient.invalidateQueries({ queryKey: ['current-budget-period', currentMonthYear] });
-        queryClient.invalidateQueries({ queryKey: ['budget-periods'] });
-      }
-      
+      await invalidateQueries();
       toast({
         title: "Expense added",
         description: "Your expense has been successfully logged.",
@@ -66,6 +67,47 @@ export const useBudget = () => {
         variant: "destructive",
       });
       console.error('Error adding expense:', error);
+    },
+  });
+
+  // Update expense mutation
+  const updateExpenseMutation = useMutation({
+    mutationFn: ({ expenseId, updates }: { expenseId: string; updates: Partial<Expense> }) =>
+      budgetService.updateExpense(expenseId, updates),
+    onSuccess: async () => {
+      await invalidateQueries();
+      toast({
+        title: "Expense updated",
+        description: "Your expense has been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update expense. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error updating expense:', error);
+    },
+  });
+
+  // Delete expense mutation
+  const deleteExpenseMutation = useMutation({
+    mutationFn: (expenseId: string) => budgetService.deleteExpense(expenseId),
+    onSuccess: async () => {
+      await invalidateQueries();
+      toast({
+        title: "Expense deleted",
+        description: "Your expense has been successfully deleted.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete expense. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error deleting expense:', error);
     },
   });
 
@@ -83,6 +125,17 @@ export const useBudget = () => {
     return addExpenseMutation.mutateAsync(expense);
   };
 
+  const updateExpense = async (expenseId: string, newAmount: number) => {
+    return updateExpenseMutation.mutateAsync({
+      expenseId,
+      updates: { amount: newAmount }
+    });
+  };
+
+  const deleteExpense = async (expenseId: string) => {
+    return deleteExpenseMutation.mutateAsync(expenseId);
+  };
+
   return {
     currentMonthExpenses,
     budgetHistory,
@@ -90,7 +143,11 @@ export const useBudget = () => {
     currentMonthYear,
     currentPeriodName,
     addExpense,
+    updateExpense,
+    deleteExpense,
     isLoading: expensesLoading || historyLoading || currentPeriodLoading,
     isAddingExpense: addExpenseMutation.isPending,
+    isUpdatingExpense: updateExpenseMutation.isPending,
+    isDeletingExpense: deleteExpenseMutation.isPending,
   };
 };

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export type Expense = {
@@ -51,6 +52,29 @@ export const budgetService = {
 
     if (error) throw error;
     return data;
+  },
+
+  // Update an expense
+  async updateExpense(expenseId: string, updates: Partial<Expense>): Promise<Expense> {
+    const { data, error } = await supabase
+      .from('expenses')
+      .update(updates)
+      .eq('id', expenseId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Delete an expense
+  async deleteExpense(expenseId: string): Promise<void> {
+    const { error } = await supabase
+      .from('expenses')
+      .delete()
+      .eq('id', expenseId);
+
+    if (error) throw error;
   },
 
   // Get budget periods

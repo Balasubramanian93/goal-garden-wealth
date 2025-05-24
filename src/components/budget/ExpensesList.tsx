@@ -12,6 +12,7 @@ interface ExpensesListProps {
   onShowMore: () => void;
   onUpdateExpense?: (expenseId: string, newAmount: number) => void;
   onDeleteExpense?: (expenseId: string) => void;
+  isDeleting?: boolean;
 }
 
 const ExpensesList = ({ 
@@ -20,7 +21,8 @@ const ExpensesList = ({
   displayedExpenses, 
   onShowMore,
   onUpdateExpense,
-  onDeleteExpense
+  onDeleteExpense,
+  isDeleting
 }: ExpensesListProps) => {
   return (
     <Card>
@@ -40,6 +42,7 @@ const ExpensesList = ({
                   expense={expense} 
                   onUpdate={onUpdateExpense}
                   onDelete={onDeleteExpense}
+                  isDeleting={isDeleting}
                 />
               ))}
               {currentMonthExpenses.length > displayedExpenses.length && (

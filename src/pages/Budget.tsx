@@ -22,8 +22,11 @@ const Budget = () => {
     currentBudgetPeriod,
     currentPeriodName,
     addExpense,
+    updateExpense,
+    deleteExpense,
     isLoading,
     isAddingExpense,
+    isDeletingExpense,
   } = useBudget();
 
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(3);
@@ -239,7 +242,6 @@ const Budget = () => {
   const handleEditIncome = async () => {
     if (!currentBudgetPeriod) return;
 
-    // Parse the income value as a number
     const incomeValue = parseFloat(editIncome);
     if (isNaN(incomeValue) || incomeValue < 0) {
       toast({
@@ -253,8 +255,6 @@ const Budget = () => {
     setIsUpdatingIncome(true);
     try {
       await budgetService.updateBudgetIncome(currentBudgetPeriod.id, incomeValue);
-      
-      // Update budget period totals after income change
       await budgetService.updateBudgetPeriodTotals(currentBudgetPeriod.id);
       
       setIsEditDialogOpen(false);
@@ -263,7 +263,6 @@ const Budget = () => {
         description: "Your monthly income has been successfully updated.",
       });
       
-      // Force refresh of current budget period
       window.location.reload();
     } catch (error) {
       console.error('Error updating income:', error);
@@ -317,13 +316,7 @@ const Budget = () => {
   };
 
   const handleUpdateExpense = async (expenseId: string, newAmount: number) => {
-    // This would need to be implemented in the budget service
-    console.log('Update expense:', expenseId, 'to amount:', newAmount);
-    // For now, just show a toast that this feature would be implemented
-    toast({
-      title: "Feature coming soon",
-      description: "Expense editing will be available in a future update.",
-    });
+    await updateExpense(expenseId, newAmount);
   };
 
   const handleAddManualExpense = async (expenseData: {
@@ -336,21 +329,7 @@ const Budget = () => {
   };
 
   const handleDeleteExpense = async (expenseId: string) => {
-    try {
-      // This would need to be implemented in the budget service
-      console.log('Delete expense:', expenseId);
-      toast({
-        title: "Feature coming soon",
-        description: "Expense deletion will be available in a future update.",
-      });
-    } catch (error) {
-      console.error('Error deleting expense:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete expense. Please try again.",
-        variant: "destructive",
-      });
-    }
+    await deleteExpense(expenseId);
   };
 
   if (!user) {
@@ -393,6 +372,7 @@ const Budget = () => {
             onShowMore={handleShowMoreExpenses}
             onUpdateExpense={handleUpdateExpense}
             onDeleteExpense={handleDeleteExpense}
+            isDeleting={isDeletingExpense}
           />
 
           {/* Log New Expense */}
