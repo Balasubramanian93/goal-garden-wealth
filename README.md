@@ -1,73 +1,66 @@
-# Welcome to your Lovable project
+# Goal Garden Wealth
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/7095cffd-52e3-477c-8afe-1af151a41835
+Goal Garden Wealth is a personal finance application designed to help users manage their budgets, track their financial goals, and make informed investment decisions. It provides a user-friendly interface with various tools and calculators to empower users to achieve their financial aspirations.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+*   **Budgeting:**
+    *   Track income and expenses.
+    *   Categorize expenses for better insights.
+    *   Visualize spending patterns with charts and summaries.
+    *   Edit and update income entries through a dialog interface.
+        *   Uses a `<Dialog>` component from Shadcn-UI for editing income.
+        *   Displays a "Updating..." state while the update is in progress.
+*   **Goal Setting:**
+    *   Define financial goals (e.g., buying a house, retirement).
+    *   Track progress towards goals.
+    *   Dynamically calculate goal progress based on current amount and target amount.
+    *   Update goal details, including:
+        *   Name
+        *   Target Amount
+        *   Current Amount
+        *   Target Date
+        *   Monthly Contribution
+        *   Expected Return
+        *   Icon Type
+    *   The `goalsStore` uses a flexible `updatePayload` object to send only the changed goal properties to the backend.
+*   **Calculators:**
+    *   CAGR Calculator
+    *   FD Calculator
+    *   FIRE Calculator
+    *   Goal SIP Calculator
+    *   HRA Calculator
+    *   IRR Calculator
+    *   MF Calculator
+    *   NSC Calculator
+    *   RD Calculator
+    *   SIP Calculator
+    *   SSY Calculator
+*   **User Authentication:**
+    *   Secure user registration and login.
+    *   Protected routes for authenticated users.
+*   **Modern UI:**
+    *   Built with React and Shadcn-UI for a responsive and accessible user interface.
+    *   Styled with Tailwind CSS for rapid and consistent styling.
+*   **Backend API (Express/TypeScript/Supabase):**
+    *   A separate backend project (`my-backend`) provides a secure API gateway for the frontend.
+    *   Handles user authentication and data access.
+    *   Uses Supabase as a backend-as-a-service for database and authentication.
+    *   Supabase project ID: `niwoaxqveoliutdvatcu`
 
-**Use Lovable**
+## Technology Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/7095cffd-52e3-477c-8afe-1af151a41835) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/7095cffd-52e3-477c-8afe-1af151a41835) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+*   **Frontend:**
+    *   React
+    *   Vite
+    *   TypeScript
+    *   Shadcn-UI
+    *   Tailwind CSS
+    *   Zustand (likely, for state management in `src/store/goalsStore.ts`)
+*   **Backend:**
+    *   Node.js
+    *   Express
+    *   TypeScript
+    *   Supabase
