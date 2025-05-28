@@ -228,7 +228,7 @@ const Index = () => {
               </CardContent>
             </Card>
           )}
-        </div>
+        </section>
       )}
 
       {/* Features Section */}
