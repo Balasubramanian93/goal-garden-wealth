@@ -432,8 +432,8 @@ const Budget = () => {
               </CardContent>
             </Card>
 
-            {/* Receipt Upload */}
-            <ReceiptUploadCard
+            {/* Receipt Upload - Hidden for now */}
+            {/* <ReceiptUploadCard
               selectedFiles={selectedFiles}
               uploadStatus={uploadStatus}
               isAddingExpense={isAddingExpense}
@@ -442,7 +442,7 @@ const Budget = () => {
               onRemoveFile={handleRemoveFile}
               onUploadReceipts={handleUploadReceipts}
               fileInputRef={fileInputRef}
-            />
+            /> */}
 
             {/* Budget History */}
             <BudgetHistoryCard
