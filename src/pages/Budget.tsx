@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -395,77 +396,84 @@ const Budget = () => {
 
   return (
     <MainLayout>
-      <div className="container mx-auto py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column - Current Month Summary and Log Expense */}
-        <div className="md:col-span-2 flex flex-col gap-6">
-          {/* Current Month Budget Summary */}
+      <div className="container mx-auto py-8">
+        {/* Top Section - Budget Summary (Full Width) */}
+        <div className="mb-6">
           <BudgetSummaryCard
             currentPeriodName={currentPeriodName}
             currentBudgetPeriod={currentBudgetPeriod}
             onEditClick={() => setIsEditDialogOpen(true)}
           />
-
-          {/* Expense Categories Chart */}
-          <ExpenseCategoriesChart
-            expenses={currentMonthExpenses}
-            currentPeriodName={currentPeriodName}
-          />
-
-          {/* Current Month Expenses List */}
-          <ExpensesList
-            currentPeriodName={currentPeriodName}
-            currentMonthExpenses={currentMonthExpenses}
-            displayedExpenses={displayedExpenses}
-            onShowMore={handleShowMoreExpenses}
-            onUpdateExpense={handleUpdateExpense}
-            onDeleteExpense={handleDeleteExpense}
-            isDeleting={isDeletingExpense}
-          />
-
-          {/* Log New Expense */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-semibold">Log New Expense</CardTitle>
-              <PlusCircle 
-                className="h-6 w-6 text-muted-foreground cursor-pointer hover:text-primary transition-colors" 
-                onClick={() => setIsAddExpenseDialogOpen(true)}
-              />
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="mb-4">Add a new transaction to your budget.</CardDescription>
-              <div 
-                className="p-6 border border-dashed rounded-md text-muted-foreground text-center h-40 flex items-center justify-center cursor-pointer hover:border-primary hover:text-primary transition-colors"
-                onClick={() => setIsAddExpenseDialogOpen(true)}
-              >
-                Click here or the + icon to add a new expense
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Right Column - Budget History and Receipt Upload */}
-        <div className="md:col-span-1 flex flex-col gap-6">
-          {/* Budget History */}
-          <BudgetHistoryCard
-            uniqueYears={uniqueYears}
-            selectedYear={selectedYear}
-            onYearChange={setSelectedYear}
-            displayedHistory={displayedHistory}
-            filteredHistory={filteredHistory}
-            onShowMore={handleShowMore}
-          />
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Quick Actions */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Log New Expense - More Prominent */}
+            <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+              <CardHeader className="text-center">
+                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                  <PlusCircle 
+                    className="h-6 w-6 text-primary cursor-pointer" 
+                    onClick={() => setIsAddExpenseDialogOpen(true)}
+                  />
+                </div>
+                <CardTitle className="text-lg font-semibold">Add New Expense</CardTitle>
+                <CardDescription>Quickly log a new transaction</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div 
+                  className="p-4 border border-dashed border-primary/30 rounded-md text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-200"
+                  onClick={() => setIsAddExpenseDialogOpen(true)}
+                >
+                  <p className="text-sm font-medium text-primary">Click to add expense</p>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Receipt Upload */}
-          <ReceiptUploadCard
-            selectedFiles={selectedFiles}
-            uploadStatus={uploadStatus}
-            isAddingExpense={isAddingExpense}
-            onUploadIconClick={handleUploadIconClick}
-            onFileChange={handleFileChange}
-            onRemoveFile={handleRemoveFile}
-            onUploadReceipts={handleUploadReceipts}
-            fileInputRef={fileInputRef}
-          />
+            {/* Receipt Upload */}
+            <ReceiptUploadCard
+              selectedFiles={selectedFiles}
+              uploadStatus={uploadStatus}
+              isAddingExpense={isAddingExpense}
+              onUploadIconClick={handleUploadIconClick}
+              onFileChange={handleFileChange}
+              onRemoveFile={handleRemoveFile}
+              onUploadReceipts={handleUploadReceipts}
+              fileInputRef={fileInputRef}
+            />
+
+            {/* Budget History */}
+            <BudgetHistoryCard
+              uniqueYears={uniqueYears}
+              selectedYear={selectedYear}
+              onYearChange={setSelectedYear}
+              displayedHistory={displayedHistory}
+              filteredHistory={filteredHistory}
+              onShowMore={handleShowMore}
+            />
+          </div>
+
+          {/* Right Column - Analytics and Expenses */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Expense Categories Chart */}
+            <ExpenseCategoriesChart
+              expenses={currentMonthExpenses}
+              currentPeriodName={currentPeriodName}
+            />
+
+            {/* Current Month Expenses List */}
+            <ExpensesList
+              currentPeriodName={currentPeriodName}
+              currentMonthExpenses={currentMonthExpenses}
+              displayedExpenses={displayedExpenses}
+              onShowMore={handleShowMoreExpenses}
+              onUpdateExpense={handleUpdateExpense}
+              onDeleteExpense={handleDeleteExpense}
+              isDeleting={isDeletingExpense}
+            />
+          </div>
         </div>
       </div>
 
