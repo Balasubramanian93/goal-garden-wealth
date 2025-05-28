@@ -5,11 +5,8 @@ import {
   ChartPie,
   User,
   LogIn,
-  Target,
-  BarChart2,
   LogOut,
-  Calculator,
-  Newspaper,
+  BarChart2,
   Home, 
   Wallet,
   TrendingUp,
@@ -27,13 +24,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 
 const ResponsiveNavigation = () => {
   const { user, signOut } = useAuth();
@@ -79,94 +69,19 @@ const ResponsiveNavigation = () => {
       <div className="hidden lg:flex items-center space-x-1">
         <NavLink to="/">
           <Home className="h-4 w-4" />
-          Home
+          Dashboard
         </NavLink>
 
-        {isAuthenticated ? (
+        {isAuthenticated && (
           <>
-            {/* Finance Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1 px-3 py-2 text-sm font-medium">
-                  <Wallet className="h-4 w-4" />
-                  Finance
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild>
-                  <Link to="/budget" className="flex items-center gap-2 w-full">
-                    <Wallet className="h-4 w-4" />
-                    Budget
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/portfolio" className="flex items-center gap-2 w-full">
-                    <TrendingUp className="h-4 w-4" />
-                    Portfolio
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/goals" className="flex items-center gap-2 w-full">
-                    <Target className="h-4 w-4" />
-                    Goals
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Analytics Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1 px-3 py-2 text-sm font-medium">
-                  <BarChart2 className="h-4 w-4" />
-                  Analytics
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild>
-                  <Link to="/analytics" className="flex items-center gap-2 w-full">
-                    <BarChart2 className="h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/tools" className="flex items-center gap-2 w-full">
-                    <Calculator className="h-4 w-4" />
-                    Calculators
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        ) : (
-          <>
-            {/* Public Resources Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1 px-3 py-2 text-sm font-medium">
-                  <Calculator className="h-4 w-4" />
-                  Resources
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild>
-                  <Link to="/blogs" className="flex items-center gap-2 w-full">
-                    <Newspaper className="h-4 w-4" />
-                    Financial Blogs
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/tools" className="flex items-center gap-2 w-full">
-                    <Calculator className="h-4 w-4" />
-                    Calculators
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <NavLink to="/budget">
+              <Wallet className="h-4 w-4" />
+              Budget
+            </NavLink>
+            <NavLink to="/portfolio">
+              <TrendingUp className="h-4 w-4" />
+              Portfolio
+            </NavLink>
           </>
         )}
       </div>
@@ -177,31 +92,13 @@ const ResponsiveNavigation = () => {
           <Home className="h-4 w-4" />
         </NavLink>
 
-        {isAuthenticated ? (
+        {isAuthenticated && (
           <>
             <NavLink to="/budget">
               <Wallet className="h-4 w-4" />
             </NavLink>
             <NavLink to="/portfolio">
               <TrendingUp className="h-4 w-4" />
-            </NavLink>
-            <NavLink to="/goals">
-              <Target className="h-4 w-4" />
-            </NavLink>
-            <NavLink to="/analytics">
-              <BarChart2 className="h-4 w-4" />
-            </NavLink>
-            <NavLink to="/tools">
-              <Calculator className="h-4 w-4" />
-            </NavLink>
-          </>
-        ) : (
-          <>
-            <NavLink to="/blogs">
-              <Newspaper className="h-4 w-4" />
-            </NavLink>
-            <NavLink to="/tools">
-              <Calculator className="h-4 w-4" />
             </NavLink>
           </>
         )}
@@ -228,55 +125,21 @@ const ResponsiveNavigation = () => {
             <nav className="mt-6 space-y-2">
               <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
                 <Home className="h-4 w-4" />
-                Home
+                Dashboard
               </NavLink>
 
-              {isAuthenticated ? (
-                <>
-                  <div className="pt-2">
-                    <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Financial Management
-                    </div>
-                    <NavLink to="/budget" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                      <Wallet className="h-4 w-4" />
-                      Budget
-                    </NavLink>
-                    <NavLink to="/portfolio" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                      <TrendingUp className="h-4 w-4" />
-                      Portfolio
-                    </NavLink>
-                    <NavLink to="/goals" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                      <Target className="h-4 w-4" />
-                      Goals
-                    </NavLink>
-                  </div>
-
-                  <div className="pt-2">
-                    <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Analytics & Tools
-                    </div>
-                    <NavLink to="/analytics" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                      <BarChart2 className="h-4 w-4" />
-                      Analytics
-                    </NavLink>
-                    <NavLink to="/tools" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                      <Calculator className="h-4 w-4" />
-                      Tools
-                    </NavLink>
-                  </div>
-                </>
-              ) : (
+              {isAuthenticated && (
                 <div className="pt-2">
                   <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Resources
+                    Financial Management
                   </div>
-                  <NavLink to="/blogs" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                    <Newspaper className="h-4 w-4" />
-                    Financial Blogs
+                  <NavLink to="/budget" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
+                    <Wallet className="h-4 w-4" />
+                    Budget
                   </NavLink>
-                  <NavLink to="/tools" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                    <Calculator className="h-4 w-4" />
-                    Calculators
+                  <NavLink to="/portfolio" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
+                    <TrendingUp className="h-4 w-4" />
+                    Portfolio
                   </NavLink>
                 </div>
               )}
