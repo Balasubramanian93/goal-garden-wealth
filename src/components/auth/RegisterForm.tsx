@@ -194,21 +194,23 @@ const RegisterForm = () => {
               control={form.control}
               name="privacyConsent"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="text-sm">
-                      I agree to the{" "}
-                      <Link to="/privacy-policy" className="text-primary hover:underline" target="_blank">
-                        Privacy Policy
-                      </Link>{" "}
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
+                <FormItem>
+                  <div className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm">
+                        I agree to the{" "}
+                        <Link to="/privacy-policy" className="text-primary hover:underline" target="_blank">
+                          Privacy Policy
+                        </Link>{" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+                    </div>
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -219,18 +221,20 @@ const RegisterForm = () => {
               control={form.control}
               name="dataProcessingConsent"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="text-sm">
-                      I consent to the processing of my personal data for account management and service provision{" "}
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
+                <FormItem>
+                  <div className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm">
+                        I consent to the processing of my personal data for account management and service provision{" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+                    </div>
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -241,17 +245,19 @@ const RegisterForm = () => {
               control={form.control}
               name="marketingConsent"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="text-sm">
-                      I agree to receive marketing communications and newsletters (optional)
-                    </FormLabel>
+                <FormItem>
+                  <div className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm">
+                        I agree to receive marketing communications and newsletters (optional)
+                      </FormLabel>
+                    </div>
                   </div>
                 </FormItem>
               )}
