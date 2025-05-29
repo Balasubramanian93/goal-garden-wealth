@@ -67,13 +67,12 @@ const ResponsiveNavigation = () => {
     <>
       {/* Desktop Navigation */}
       <div className="hidden lg:flex items-center space-x-1">
-        <NavLink to="/">
-          <Home className="h-4 w-4" />
-          Dashboard
-        </NavLink>
-
         {isAuthenticated && (
           <>
+            <NavLink to="/">
+              <Home className="h-4 w-4" />
+              Dashboard
+            </NavLink>
             <NavLink to="/budget">
               <Wallet className="h-4 w-4" />
               Budget
@@ -88,12 +87,11 @@ const ResponsiveNavigation = () => {
 
       {/* Tablet Navigation */}
       <div className="hidden md:flex lg:hidden items-center space-x-1">
-        <NavLink to="/">
-          <Home className="h-4 w-4" />
-        </NavLink>
-
         {isAuthenticated && (
           <>
+            <NavLink to="/">
+              <Home className="h-4 w-4" />
+            </NavLink>
             <NavLink to="/budget">
               <Wallet className="h-4 w-4" />
             </NavLink>
@@ -123,25 +121,27 @@ const ResponsiveNavigation = () => {
             </SheetHeader>
             
             <nav className="mt-6 space-y-2">
-              <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                <Home className="h-4 w-4" />
-                Dashboard
-              </NavLink>
-
               {isAuthenticated && (
-                <div className="pt-2">
-                  <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Financial Management
+                <>
+                  <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
+                    <Home className="h-4 w-4" />
+                    Dashboard
+                  </NavLink>
+
+                  <div className="pt-2">
+                    <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Financial Management
+                    </div>
+                    <NavLink to="/budget" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
+                      <Wallet className="h-4 w-4" />
+                      Budget
+                    </NavLink>
+                    <NavLink to="/portfolio" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
+                      <TrendingUp className="h-4 w-4" />
+                      Portfolio
+                    </NavLink>
                   </div>
-                  <NavLink to="/budget" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                    <Wallet className="h-4 w-4" />
-                    Budget
-                  </NavLink>
-                  <NavLink to="/portfolio" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                    <TrendingUp className="h-4 w-4" />
-                    Portfolio
-                  </NavLink>
-                </div>
+                </>
               )}
               
               <div className="pt-4 border-t space-y-2">
