@@ -2,61 +2,43 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, Clock, CheckCircle } from "lucide-react";
+import { Download, Loader2, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ExportRequest {
   id: string;
-  status: string;
+  status: 'pending' | 'completed' | 'failed';
   requested_at: string;
-  completed_at: string | null;
-  expires_at: string;
-  export_data: any;
+  completed_at?: string;
+  export_data?: any;
 }
 
 const DataExportCard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isRequesting, setIsRequesting] = useState(false);
-  const [exportRequests, setExportRequests] = useState<ExportRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [latestRequest, setLatestRequest] = useState<ExportRequest | null>(null);
 
-  const collectUserData = async () => {
-    if (!user) return null;
+  const checkExistingRequest = async () => {
+    if (!user) return;
 
     try {
-      // Collect all user data from various tables
-      const [profileData, goalsData, portfolioData, expensesData, receiptsData] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
-        supabase.from('goals').select('*').eq('user_id', user.id),
-        supabase.from('portfolio_assets').select('*').eq('user_id', user.id),
-        supabase.from('expenses').select('*').eq('user_id', user.id),
-        supabase.from('receipts').select('*').eq('user_id', user.id)
-      ]);
+      const { data, error } = await supabase
+        .from('data_export_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('requested_at', { ascending: false })
+        .limit(1)
+        .single();
 
-      return {
-        user_profile: {
-          id: user.id,
-          email: user.email,
-          created_at: user.created_at,
-          last_sign_in: user.last_sign_in_at,
-          profile: profileData.data
-        },
-        financial_data: {
-          goals: goalsData.data || [],
-          portfolio_assets: portfolioData.data || [],
-          expenses: expensesData.data || [],
-          receipts: receiptsData.data || []
-        },
-        export_timestamp: new Date().toISOString(),
-        export_format: 'JSON'
-      };
+      if (!error && data) {
+        setLatestRequest(data);
+      }
     } catch (error) {
-      console.error('Error collecting user data:', error);
-      return null;
+      // No existing request found
     }
   };
 
@@ -65,34 +47,71 @@ const DataExportCard = () => {
 
     setIsRequesting(true);
     try {
-      const userData = await collectUserData();
+      // First, try to use edge function for comprehensive export
+      let exportData;
       
-      if (!userData) {
-        throw new Error('Failed to collect user data');
+      try {
+        const { data: functionData, error: functionError } = await supabase.functions.invoke('export-user-data', {
+          body: { userId: user.id }
+        });
+        
+        if (functionError) throw functionError;
+        exportData = functionData;
+      } catch (functionError) {
+        console.warn('Edge function failed, falling back to direct queries:', functionError);
+        
+        // Fallback: Direct queries to get user data
+        const [
+          profileData,
+          expensesData,
+          budgetData,
+          goalsData,
+          portfolioData,
+          consentsData
+        ] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', user.id).single(),
+          supabase.from('expenses').select('*').eq('user_id', user.id),
+          supabase.from('budget_periods').select('*').eq('user_id', user.id),
+          supabase.from('goals').select('*').eq('user_id', user.id),
+          supabase.from('portfolio_assets').select('*').eq('user_id', user.id),
+          supabase.from('user_consents').select('*').eq('user_id', user.id)
+        ]);
+
+        exportData = {
+          profile: profileData.data,
+          expenses: expensesData.data || [],
+          budgets: budgetData.data || [],
+          goals: goalsData.data || [],
+          portfolio: portfolioData.data || [],
+          consents: consentsData.data || [],
+          exported_at: new Date().toISOString()
+        };
       }
 
-      const { error } = await supabase
+      // Store the export request
+      const { data: request, error } = await supabase
         .from('data_export_requests')
         .insert({
           user_id: user.id,
           status: 'completed',
-          export_data: userData,
+          export_data: exportData,
           completed_at: new Date().toISOString()
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
+      setLatestRequest(request);
       toast({
-        title: "Export request created",
-        description: "Your data export is ready for download.",
+        title: "Data export ready",
+        description: "Your data export has been prepared and is ready for download.",
       });
-
-      loadExportRequests();
     } catch (error: any) {
-      console.error('Error requesting data export:', error);
+      console.error('Error creating data export:', error);
       toast({
         title: "Export failed",
-        description: error.message || "Failed to create export request. Please try again.",
+        description: error.message || "Failed to create data export. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -100,55 +119,43 @@ const DataExportCard = () => {
     }
   };
 
-  const loadExportRequests = async () => {
-    if (!user) return;
+  const downloadData = async () => {
+    if (!latestRequest?.export_data) return;
 
-    setIsLoading(true);
+    setIsDownloading(true);
     try {
-      const { data, error } = await supabase
-        .from('data_export_requests')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('requested_at', { ascending: false })
-        .limit(5);
+      const dataStr = JSON.stringify(latestRequest.export_data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `my-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-      if (error) throw error;
-      setExportRequests(data || []);
-    } catch (error) {
-      console.error('Error loading export requests:', error);
+      toast({
+        title: "Download started",
+        description: "Your data export file has been downloaded.",
+      });
+    } catch (error: any) {
+      console.error('Error downloading data:', error);
+      toast({
+        title: "Download failed",
+        description: "Failed to download data export. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setIsDownloading(false);
     }
   };
 
-  const downloadExport = (exportData: any, requestId: string) => {
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `wealthwise-data-export-${requestId.substring(0, 8)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  // Load export requests when component mounts
-  React.useEffect(() => {
-    loadExportRequests();
-  }, [user]);
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
-    }
-  };
+  // Check for existing request on mount
+  useState(() => {
+    checkExistingRequest();
+  });
 
   return (
     <Card>
@@ -158,65 +165,67 @@ const DataExportCard = () => {
           Data Export
         </CardTitle>
         <CardDescription>
-          Download a copy of all your personal data stored in WealthWise. This includes your profile, financial goals, 
-          portfolio information, and transaction history.
+          Download a copy of all your personal data stored in our system.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert>
-          <AlertDescription>
-            Your data export will be available for download immediately and will expire after 7 days for security reasons.
-          </AlertDescription>
-        </Alert>
+        <div className="text-sm text-muted-foreground">
+          <p>Your export will include:</p>
+          <ul className="list-disc pl-5 mt-2 space-y-1">
+            <li>Profile information</li>
+            <li>Budget and expense data</li>
+            <li>Financial goals and investments</li>
+            <li>Portfolio information</li>
+            <li>Consent preferences</li>
+          </ul>
+        </div>
 
-        <Button 
-          onClick={requestDataExport} 
-          disabled={isRequesting}
-          className="w-full"
-        >
-          {isRequesting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Preparing Export...
-            </>
-          ) : (
-            <>
-              <Download className="mr-2 h-4 w-4" />
-              Request Data Export
-            </>
-          )}
-        </Button>
-
-        {exportRequests.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">Recent Export Requests</h4>
-            {exportRequests.map((request) => (
-              <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(request.status)}
-                  <div>
-                    <p className="text-sm font-medium">
-                      Export requested on {new Date(request.requested_at).toLocaleDateString()}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Status: {request.status} • Expires: {new Date(request.expires_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                {request.status === 'completed' && request.export_data && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => downloadExport(request.export_data, request.id)}
-                  >
-                    <Download className="mr-2 h-3 w-3" />
-                    Download
-                  </Button>
-                )}
-              </div>
-            ))}
+        {latestRequest && latestRequest.status === 'completed' && (
+          <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <span className="text-sm text-green-800">
+              Data export ready (created {new Date(latestRequest.requested_at).toLocaleDateString()})
+            </span>
           </div>
         )}
+
+        <div className="flex gap-2">
+          <Button 
+            onClick={requestDataExport}
+            disabled={isRequesting}
+            variant="outline"
+            className="flex-1"
+          >
+            {isRequesting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Preparing...
+              </>
+            ) : (
+              'Create New Export'
+            )}
+          </Button>
+          
+          {latestRequest?.export_data && (
+            <Button 
+              onClick={downloadData}
+              disabled={isDownloading}
+              className="flex-1"
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
