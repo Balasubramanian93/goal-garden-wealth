@@ -34,6 +34,12 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     ? `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name.charAt(0)}`
     : user?.email?.charAt(0).toUpperCase() || 'U';
 
+  const shouldShowBreadcrumb = () => {
+    const currentPath = location.pathname;
+    // Hide breadcrumb for dashboard, budget, and portfolio pages
+    return !['/', '/budget', '/portfolio'].includes(currentPath) && isAuthenticated;
+  };
+
   const getCurrentPageTitle = () => {
     const currentPath = location.pathname;
     if (currentPath === "/") return "Home";
@@ -50,7 +56,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background font-poppins">
       {/* Modern Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
@@ -125,14 +131,11 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
       </header>
 
       {/* Page Title Breadcrumb */}
-      {isAuthenticated && (
+      {shouldShowBreadcrumb() && (
         <div className="border-b bg-muted/30">
           <div className="container py-3">
             <h1 className="text-lg font-semibold text-foreground">{getCurrentPageTitle()}</h1>
             <p className="text-sm text-muted-foreground">
-              {location.pathname === "/" && "Welcome to your financial dashboard"}
-              {location.pathname.startsWith("/budget") && "Track and manage your monthly expenses"}
-              {location.pathname.startsWith("/portfolio") && "Monitor your investment portfolio"}
               {location.pathname.startsWith("/goals") && "Set and achieve your financial goals"}
               {location.pathname.startsWith("/analytics") && "Analyze your financial performance"}
               {location.pathname.startsWith("/tools") && "Calculate and plan your finances"}
