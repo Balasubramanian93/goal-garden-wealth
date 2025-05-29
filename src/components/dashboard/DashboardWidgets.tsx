@@ -1,4 +1,3 @@
-
 import { useBudget } from "@/hooks/useBudget";
 import { useGoalsStore } from "@/store/goalsStore";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +11,11 @@ import RecentTransactionsWidget from "./RecentTransactionsWidget";
 import QuickActionsWidget from "./QuickActionsWidget";
 import FinancialHealthWidget from "./FinancialHealthWidget";
 import AnalyticsSummaryWidget from "./AnalyticsSummaryWidget";
+import PersonalizedRecommendationsWidget from "./PersonalizedRecommendationsWidget";
+import AchievementBadgesWidget from "./AchievementBadgesWidget";
+import FinancialCalendarWidget from "./FinancialCalendarWidget";
+import WidgetCustomizationPanel from "./WidgetCustomizationPanel";
+import { useWidgetPreferences } from "@/hooks/useWidgetPreferences";
 
 const DashboardWidgets = () => {
   const { user } = useAuth();
@@ -39,37 +43,55 @@ const DashboardWidgets = () => {
     }
   }, [user, fetchGoals]);
 
+  const { preferences } = useWidgetPreferences();
+
   return (
     <div className="space-y-6">
       {/* Top Row - Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <BudgetOverviewWidget 
-          currentBudgetPeriod={currentBudgetPeriod} 
-          isLoading={budgetLoading} 
-        />
-        <PortfolioOverviewWidget 
-          portfolioAssets={portfolioAssets} 
-          isLoading={portfolioLoading} 
-        />
-        <FinancialHealthWidget 
-          currentBudgetPeriod={currentBudgetPeriod}
-          goals={goals}
-          portfolioAssets={portfolioAssets}
-        />
+        {preferences.budgetOverview && (
+          <BudgetOverviewWidget 
+            currentBudgetPeriod={currentBudgetPeriod} 
+            isLoading={budgetLoading} 
+          />
+        )}
+        {preferences.portfolioOverview && (
+          <PortfolioOverviewWidget 
+            portfolioAssets={portfolioAssets} 
+            isLoading={portfolioLoading} 
+          />
+        )}
+        {preferences.financialHealth && (
+          <FinancialHealthWidget 
+            currentBudgetPeriod={currentBudgetPeriod}
+            goals={goals}
+            portfolioAssets={portfolioAssets}
+          />
+        )}
       </div>
 
       {/* Quick Actions */}
-      <QuickActionsWidget />
+      {preferences.quickActions && <QuickActionsWidget />}
 
-      {/* Second Row - Goals and Analytics */}
+      {/* Second Row - Goals, Analytics, and Personalization */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GoalsProgressWidget goals={goals} isLoading={goalsLoading} />
-        <AnalyticsSummaryWidget />
+        {preferences.goalsProgress && (
+          <GoalsProgressWidget goals={goals} isLoading={goalsLoading} />
+        )}
+        {preferences.analyticsSummary && <AnalyticsSummaryWidget />}
+        {preferences.personalizedRecommendations && <PersonalizedRecommendationsWidget />}
+        {preferences.achievementBadges && <AchievementBadgesWidget />}
       </div>
 
-      {/* Third Row - Recent Activity */}
+      {/* Third Row - Recent Activity and Calendar */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RecentTransactionsWidget />
+        {preferences.recentTransactions && <RecentTransactionsWidget />}
+        {preferences.financialCalendar && <FinancialCalendarWidget />}
+      </div>
+
+      {/* Widget Customization Panel */}
+      <div className="max-w-md">
+        <WidgetCustomizationPanel />
       </div>
     </div>
   );
