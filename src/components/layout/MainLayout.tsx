@@ -8,7 +8,8 @@ import {
   LogOut,
   Moon,
   Sun,
-  Settings
+  Settings,
+  Layout
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -22,7 +23,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import ResponsiveNavigation from "./ResponsiveNavigation";
+import WidgetCustomizationPanel from "@/components/dashboard/WidgetCustomizationPanel";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut } = useAuth();
@@ -35,7 +45,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`
     : user?.email?.split('@')[0];
 
-  // Get user initials for avatar fallback
   const userInitials = user?.user_metadata?.first_name && user?.user_metadata?.last_name
     ? `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name.charAt(0)}`
     : user?.email?.charAt(0).toUpperCase() || 'U';
@@ -116,6 +125,41 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                         <span>View Profile</span>
                       </Link>
                     </DropdownMenuItem>
+                    
+                    {/* Dashboard Customization Option */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Layout className="mr-2 h-4 w-4" />
+                          <span>Customize Dashboard</span>
+                        </DropdownMenuItem>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Dashboard Settings</DialogTitle>
+                          <DialogDescription>
+                            Customize your dashboard widgets and preferences
+                          </DialogDescription>
+                        </DialogHeader>
+                        <WidgetCustomizationPanel />
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* Theme Toggle in Dropdown for Mobile */}
+                    <DropdownMenuItem onClick={toggleTheme} className="sm:hidden">
+                      {theme === 'dark' ? (
+                        <>
+                          <Sun className="mr-2 h-4 w-4" />
+                          <span>Light Mode</span>
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="mr-2 h-4 w-4" />
+                          <span>Dark Mode</span>
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                    
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => signOut()}>
                       <LogOut className="mr-2 h-4 w-4" />

@@ -1,3 +1,4 @@
+
 import { useBudget } from "@/hooks/useBudget";
 import { useGoalsStore } from "@/store/goalsStore";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +15,6 @@ import AnalyticsSummaryWidget from "./AnalyticsSummaryWidget";
 import PersonalizedRecommendationsWidget from "./PersonalizedRecommendationsWidget";
 import AchievementBadgesWidget from "./AchievementBadgesWidget";
 import FinancialCalendarWidget from "./FinancialCalendarWidget";
-import WidgetCustomizationPanel from "./WidgetCustomizationPanel";
 import { useWidgetPreferences } from "@/hooks/useWidgetPreferences";
 
 const DashboardWidgets = () => {
@@ -87,11 +87,6 @@ const DashboardWidgets = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {preferences.recentTransactions && <RecentTransactionsWidget />}
         {preferences.financialCalendar && <FinancialCalendarWidget />}
-      </div>
-
-      {/* Widget Customization Panel */}
-      <div className="max-w-md">
-        <WidgetCustomizationPanel />
       </div>
     </div>
   );
