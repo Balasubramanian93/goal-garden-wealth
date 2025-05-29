@@ -87,36 +87,31 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
     );
   };
 
-  // Modern legend component
-  const ModernLegend = ({ payload }: any) => {
+  // Custom Legend Component
+  const CustomLegend = ({ payload }: any) => {
     if (!payload || payload.length === 0) return null;
 
     return (
-      <div className="flex flex-col gap-3">
-        <h4 className="font-semibold text-base text-foreground mb-2">Categories</h4>
-        <div className="grid gap-2 max-h-80 overflow-y-auto pr-2">
+      <div className="mt-6">
+        <h4 className="font-semibold text-base text-foreground mb-4 text-center">Category Legend</h4>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {categoryData.map((item, index) => (
             <div 
               key={item.category} 
-              className="group flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-card/50 to-accent/20 border border-border/30 hover:border-primary/40 hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer backdrop-blur-sm"
+              className="flex items-center gap-2 p-2 rounded-lg bg-gradient-to-r from-card/50 to-accent/20 border border-border/30 hover:border-primary/40 hover:shadow-md transition-all duration-300"
             >
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-3 h-3 rounded-full shadow-lg border-2 border-white/20" 
-                  style={{ 
-                    backgroundColor: MODERN_COLORS[index % MODERN_COLORS.length],
-                  }}
-                />
-                <span className="text-sm font-medium text-foreground truncate max-w-24 group-hover:text-primary transition-colors duration-300">
+              <div 
+                className="w-4 h-4 rounded-full shadow-lg border-2 border-white/20 flex-shrink-0" 
+                style={{ 
+                  backgroundColor: MODERN_COLORS[index % MODERN_COLORS.length],
+                }}
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-xs font-medium text-foreground truncate block">
                   {item.category}
                 </span>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors duration-300">
-                  ${item.amount.toFixed(2)}
-                </div>
-                <div className="text-xs text-muted-foreground font-medium">
-                  {item.percentage}%
+                <div className="text-xs text-muted-foreground">
+                  ${item.amount.toFixed(2)} ({item.percentage}%)
                 </div>
               </div>
             </div>
@@ -187,65 +182,59 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
         </div>
       </CardHeader>
       
-      <CardContent className="p-0">
-        <div className="grid lg:grid-cols-5 min-h-[500px]">
-          {/* Chart Section - Takes up more space */}
-          <div className="lg:col-span-3 p-6 bg-gradient-to-br from-background to-accent/5">
-            <div className="relative h-[400px] w-full">
-              <ChartContainer config={chartConfig} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <defs>
-                      {MODERN_COLORS.map((color, index) => (
-                        <linearGradient key={index} id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor={color} stopOpacity={1} />
-                          <stop offset="100%" stopColor={color} stopOpacity={0.7} />
-                        </linearGradient>
-                      ))}
-                    </defs>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={CustomLabel}
-                      outerRadius="90%"
-                      innerRadius="40%"
-                      fill="#8884d8"
-                      dataKey="amount"
-                      stroke="rgba(255,255,255,0.8)"
-                      strokeWidth={2}
-                      animationBegin={0}
-                      animationDuration={1500}
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={`url(#gradient-${index % MODERN_COLORS.length})`}
-                          style={{
-                            filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.15))',
-                          }}
-                        />
-                      ))}
-                    </Pie>
-                    <ChartTooltip 
-                      content={<ChartTooltipContent className="bg-background/95 backdrop-blur-sm border border-border/50 shadow-xl rounded-xl p-4" />}
-                      formatter={(value: any, name: string) => [
-                        `$${Number(value).toFixed(2)}`, 
-                        name
-                      ]}
+      <CardContent className="p-6">
+        {/* Chart Section */}
+        <div className="relative h-[400px] w-full mb-6">
+          <ChartContainer config={chartConfig} className="h-full w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <defs>
+                  {MODERN_COLORS.map((color, index) => (
+                    <linearGradient key={index} id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor={color} stopOpacity={1} />
+                      <stop offset="100%" stopColor={color} stopOpacity={0.7} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <Pie
+                  data={categoryData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={CustomLabel}
+                  outerRadius="85%"
+                  innerRadius="35%"
+                  fill="#8884d8"
+                  dataKey="amount"
+                  stroke="rgba(255,255,255,0.8)"
+                  strokeWidth={2}
+                  animationBegin={0}
+                  animationDuration={1500}
+                >
+                  {categoryData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={`url(#gradient-${index % MODERN_COLORS.length})`}
+                      style={{
+                        filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.15))',
+                      }}
                     />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </div>
-          </div>
-
-          {/* Legend Section - Better organized */}
-          <div className="lg:col-span-2 p-6 bg-gradient-to-br from-accent/5 to-background border-l border-border/30">
-            <ModernLegend />
-          </div>
+                  ))}
+                </Pie>
+                <ChartTooltip 
+                  content={<ChartTooltipContent className="bg-background/95 backdrop-blur-sm border border-border/50 shadow-xl rounded-xl p-4" />}
+                  formatter={(value: any, name: string) => [
+                    `$${Number(value).toFixed(2)}`, 
+                    name
+                  ]}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartContainer>
         </div>
+
+        {/* Legend Section */}
+        <CustomLegend />
       </CardContent>
     </Card>
   );
