@@ -32,16 +32,37 @@ const AccountDeletionCard = () => {
         // If edge function fails, try direct deletion
         console.warn('Edge function failed, attempting direct deletion:', error);
         
+        // First get user's goals to delete goal_investments
+        const { data: userGoals } = await supabase
+          .from('goals')
+          .select('id')
+          .eq('user_id', user.id);
+
+        // Delete goal_investments for user's goals
+        if (userGoals && userGoals.length > 0) {
+          const goalIds = userGoals.map(goal => goal.id);
+          await supabase.from('goal_investments').delete().in('goal_id', goalIds);
+        }
+
+        // Delete receipt_items for user's receipts
+        const { data: userReceipts } = await supabase
+          .from('receipts')
+          .select('id')
+          .eq('user_id', user.id);
+
+        if (userReceipts && userReceipts.length > 0) {
+          const receiptIds = userReceipts.map(receipt => receipt.id);
+          await supabase.from('receipt_items').delete().in('receipt_id', receiptIds);
+        }
+
         // Delete user data from our tables directly using proper table names
         await supabase.from('user_consents').delete().eq('user_id', user.id);
         await supabase.from('data_export_requests').delete().eq('user_id', user.id);
         await supabase.from('expenses').delete().eq('user_id', user.id);
         await supabase.from('budget_periods').delete().eq('user_id', user.id);
         await supabase.from('goals').delete().eq('user_id', user.id);
-        await supabase.from('goal_investments').delete().eq('goal_id', user.id);
         await supabase.from('portfolio_assets').delete().eq('user_id', user.id);
         await supabase.from('receipts').delete().eq('user_id', user.id);
-        await supabase.from('receipt_items').delete().eq('receipt_id', user.id);
         await supabase.from('category_spending').delete().eq('user_id', user.id);
         await supabase.from('profiles').delete().eq('id', user.id);
       }
