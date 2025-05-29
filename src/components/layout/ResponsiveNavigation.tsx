@@ -123,7 +123,7 @@ const ResponsiveNavigation = () => {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                   <ChartPie className="h-5 w-5 text-primary-foreground" />
                 </div>
-                WealthWise
+                FinanceBloom
               </SheetTitle>
             </SheetHeader>
             

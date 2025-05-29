@@ -46,7 +46,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     if (currentPath.startsWith("/login")) return "Login";
     if (currentPath.startsWith("/register")) return "Register";
     if (currentPath.startsWith("/profile")) return "Profile Settings";
-    return "WealthWise";
+    return "FinanceBloom";
   };
 
   return (
@@ -59,7 +59,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <ChartPie className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="hidden sm:inline-block">WealthWise</span>
+            <span className="hidden sm:inline-block">FinanceBloom</span>
           </Link>
           
           {/* Navigation */}
@@ -157,7 +157,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                   <ChartPie className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold">WealthWise</h3>
+                <h3 className="text-lg font-semibold">FinanceBloom</h3>
               </div>
               <p className="text-sm text-muted-foreground">
                 Your complete wealth management solution for a secure financial future.
@@ -234,7 +234,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           
           <div className="border-t mt-8 pt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} WealthWise. All rights reserved.
+              &copy; {new Date().getFullYear()} FinanceBloom. All rights reserved.
             </p>
           </div>
         </div>

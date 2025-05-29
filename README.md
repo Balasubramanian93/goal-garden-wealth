@@ -1,8 +1,9 @@
-# Goal Garden Wealth
+
+# FinanceBloom
 
 ## Project Overview
 
-Goal Garden Wealth is a personal finance application designed to help users manage their budgets, track their financial goals, and make informed investment decisions. It provides a user-friendly interface with various tools and calculators to empower users to achieve their financial aspirations.
+FinanceBloom is a personal finance application designed to help users manage their budgets, track their financial goals, and make informed investment decisions. It provides a user-friendly interface with various tools and calculators to empower users to achieve their financial aspirations.
 
 ## Features
 
@@ -26,6 +27,11 @@ Goal Garden Wealth is a personal finance application designed to help users mana
         *   Expected Return
         *   Icon Type
     *   The `goalsStore` uses a flexible `updatePayload` object to send only the changed goal properties to the backend.
+*   **Smart Reminders:**
+    *   Create custom reminders with specific dates and times.
+    *   Track financial deadlines and important events.
+    *   Manage reminder priorities and types (one-time, recurring).
+    *   Automated reminders for SIP contributions, goal deadlines, and portfolio reviews.
 *   **Calculators:**
     *   CAGR Calculator
     *   FD Calculator
