@@ -1,19 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface ExportRequest {
-  id: string;
-  status: 'pending' | 'completed' | 'failed';
-  requested_at: string;
-  completed_at?: string;
-  export_data?: any;
-}
+type ExportRequest = Tables<'data_export_requests'>;
 
 const DataExportCard = () => {
   const { user } = useAuth();
@@ -32,13 +27,14 @@ const DataExportCard = () => {
         .eq('user_id', user.id)
         .order('requested_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         setLatestRequest(data);
       }
     } catch (error) {
       // No existing request found
+      console.log('No existing request found:', error);
     }
   };
 
@@ -69,7 +65,7 @@ const DataExportCard = () => {
           portfolioData,
           consentsData
         ] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', user.id).single(),
+          supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
           supabase.from('expenses').select('*').eq('user_id', user.id),
           supabase.from('budget_periods').select('*').eq('user_id', user.id),
           supabase.from('goals').select('*').eq('user_id', user.id),
@@ -153,9 +149,9 @@ const DataExportCard = () => {
   };
 
   // Check for existing request on mount
-  useState(() => {
+  useEffect(() => {
     checkExistingRequest();
-  });
+  }, [user]);
 
   return (
     <Card>
