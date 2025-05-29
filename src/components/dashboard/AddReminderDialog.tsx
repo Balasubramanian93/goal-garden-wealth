@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Plus } from "lucide-react";
+import { CalendarIcon, Plus, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +25,7 @@ const AddReminderDialog = ({ onReminderAdded }: AddReminderDialogProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState<Date>();
+  const [dueTime, setDueTime] = useState("09:00");
   const [priority, setPriority] = useState("medium");
   const [reminderType, setReminderType] = useState("one-time");
   const [isLoading, setIsLoading] = useState(false);
@@ -41,13 +42,18 @@ const AddReminderDialog = ({ onReminderAdded }: AddReminderDialogProps) => {
     setIsLoading(true);
     
     try {
+      // Combine date and time
+      const [hours, minutes] = dueTime.split(':').map(Number);
+      const combinedDateTime = new Date(dueDate);
+      combinedDateTime.setHours(hours, minutes, 0, 0);
+
       const { error } = await supabase
         .from('custom_reminders')
         .insert({
           user_id: user.id,
           title,
           description: description || null,
-          due_date: dueDate.toISOString(),
+          due_date: combinedDateTime.toISOString(),
           priority,
           reminder_type: reminderType,
           status: 'active'
@@ -61,6 +67,7 @@ const AddReminderDialog = ({ onReminderAdded }: AddReminderDialogProps) => {
       setTitle("");
       setDescription("");
       setDueDate(undefined);
+      setDueTime("09:00");
       setPriority("medium");
       setReminderType("one-time");
       setOpen(false);
@@ -117,35 +124,52 @@ const AddReminderDialog = ({ onReminderAdded }: AddReminderDialogProps) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Due Date *</Label>
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !dueDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dueDate ? format(dueDate, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={dueDate}
-                  onSelect={handleDateSelect}
-                  disabled={(date) => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    return date < today;
-                  }}
-                  initialFocus
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Due Date *</Label>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dueDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dueDate ? format(dueDate, "MMM dd, yyyy") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={dueDate}
+                    onSelect={handleDateSelect}
+                    disabled={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date < today;
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dueTime">Time *</Label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="dueTime"
+                  type="time"
+                  value={dueTime}
+                  onChange={(e) => setDueTime(e.target.value)}
+                  className="pl-10"
+                  required
                 />
-              </PopoverContent>
-            </Popover>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
