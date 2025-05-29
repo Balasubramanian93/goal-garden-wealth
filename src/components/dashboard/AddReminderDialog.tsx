@@ -131,7 +131,11 @@ const AddReminderDialog = ({ onReminderAdded }: AddReminderDialogProps) => {
                   mode="single"
                   selected={dueDate}
                   onSelect={setDueDate}
-                  disabled={(date) => date < new Date()}
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return date < today;
+                  }}
                   initialFocus
                 />
               </PopoverContent>
