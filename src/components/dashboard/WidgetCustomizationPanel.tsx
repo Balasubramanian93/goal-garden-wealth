@@ -17,7 +17,7 @@ const WidgetCustomizationPanel = () => {
     analyticsSummary: "Analytics Summary",
     personalizedRecommendations: "Smart Recommendations",
     achievementBadges: "Achievement Badges",
-    financialCalendar: "Financial Calendar",
+    reminders: "Reminders",
   };
 
   return (

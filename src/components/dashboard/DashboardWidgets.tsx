@@ -14,7 +14,7 @@ import FinancialHealthWidget from "./FinancialHealthWidget";
 import AnalyticsSummaryWidget from "./AnalyticsSummaryWidget";
 import PersonalizedRecommendationsWidget from "./PersonalizedRecommendationsWidget";
 import AchievementBadgesWidget from "./AchievementBadgesWidget";
-import FinancialCalendarWidget from "./FinancialCalendarWidget";
+import RemindersWidget from "./RemindersWidget";
 import { useWidgetPreferences } from "@/hooks/useWidgetPreferences";
 
 const DashboardWidgets = () => {
@@ -83,10 +83,10 @@ const DashboardWidgets = () => {
         {preferences.achievementBadges && <AchievementBadgesWidget />}
       </div>
 
-      {/* Third Row - Recent Activity and Calendar */}
+      {/* Third Row - Recent Activity and Reminders */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {preferences.recentTransactions && <RecentTransactionsWidget />}
-        {preferences.financialCalendar && <FinancialCalendarWidget />}
+        {preferences.reminders && <RemindersWidget />}
       </div>
     </div>
   );

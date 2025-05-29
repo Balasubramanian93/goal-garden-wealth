@@ -1,10 +1,10 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Target, CreditCard, AlertCircle } from "lucide-react";
+import { Bell, Clock, Target, CreditCard, AlertCircle } from "lucide-react";
 import { useGoalsStore } from "@/store/goalsStore";
 
-const FinancialCalendarWidget = () => {
+const RemindersWidget = () => {
   const { goals } = useGoalsStore();
 
   const generateUpcomingEvents = () => {
@@ -39,7 +39,7 @@ const FinancialCalendarWidget = () => {
       daysAway: Math.ceil((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
       type: "budget",
       priority: "medium",
-      icon: Calendar
+      icon: Bell
     });
 
     // Add SIP reminder (assuming 5th of every month)
@@ -91,7 +91,7 @@ const FinancialCalendarWidget = () => {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'goal': return Target;
-      case 'budget': return Calendar;
+      case 'budget': return Bell;
       case 'investment': return CreditCard;
       case 'review': return Clock;
       default: return AlertCircle;
@@ -102,8 +102,8 @@ const FinancialCalendarWidget = () => {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
-          Financial Calendar
+          <Bell className="h-5 w-5" />
+          Reminders
         </CardTitle>
         <CardDescription>Upcoming important dates and deadlines</CardDescription>
       </CardHeader>
@@ -147,4 +147,4 @@ const FinancialCalendarWidget = () => {
   );
 };
 
-export default FinancialCalendarWidget;
+export default RemindersWidget;

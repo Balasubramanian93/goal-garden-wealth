@@ -11,7 +11,7 @@ type WidgetKey =
   | 'analyticsSummary'
   | 'personalizedRecommendations'
   | 'achievementBadges'
-  | 'financialCalendar';
+  | 'reminders';
 
 type WidgetPreferences = Record<WidgetKey, boolean>;
 
@@ -25,7 +25,7 @@ const defaultPreferences: WidgetPreferences = {
   analyticsSummary: true,
   personalizedRecommendations: true,
   achievementBadges: true,
-  financialCalendar: true,
+  reminders: true,
 };
 
 export const useWidgetPreferences = () => {
@@ -36,6 +36,11 @@ export const useWidgetPreferences = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // Handle migration from old financialCalendar key to new reminders key
+        if (parsed.financialCalendar !== undefined && parsed.reminders === undefined) {
+          parsed.reminders = parsed.financialCalendar;
+          delete parsed.financialCalendar;
+        }
         setPreferences({ ...defaultPreferences, ...parsed });
       } catch (error) {
         console.error('Error parsing widget preferences:', error);
