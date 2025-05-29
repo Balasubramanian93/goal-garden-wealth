@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Expense } from '@/services/budgetService';
 import { TrendingUp, DollarSign } from 'lucide-react';
 
@@ -87,40 +87,6 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
     );
   };
 
-  // Custom Legend Component
-  const CustomLegend = ({ payload }: any) => {
-    if (!payload || payload.length === 0) return null;
-
-    return (
-      <div className="mt-6">
-        <h4 className="font-semibold text-base text-foreground mb-4 text-center">Category Legend</h4>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {categoryData.map((item, index) => (
-            <div 
-              key={item.category} 
-              className="flex items-center gap-2 p-2 rounded-lg bg-gradient-to-r from-card/50 to-accent/20 border border-border/30 hover:border-primary/40 hover:shadow-md transition-all duration-300"
-            >
-              <div 
-                className="w-4 h-4 rounded-full shadow-lg border-2 border-white/20 flex-shrink-0" 
-                style={{ 
-                  backgroundColor: MODERN_COLORS[index % MODERN_COLORS.length],
-                }}
-              />
-              <div className="min-w-0 flex-1">
-                <span className="text-xs font-medium text-foreground truncate block">
-                  {item.category}
-                </span>
-                <div className="text-xs text-muted-foreground">
-                  ${item.amount.toFixed(2)} ({item.percentage}%)
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   if (expenses.length === 0) {
     return (
       <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-accent/5">
@@ -182,59 +148,91 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
         </div>
       </CardHeader>
       
-      <CardContent className="p-6">
-        {/* Chart Section */}
-        <div className="relative h-[400px] w-full mb-6">
-          <ChartContainer config={chartConfig} className="h-full w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <defs>
-                  {MODERN_COLORS.map((color, index) => (
-                    <linearGradient key={index} id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor={color} stopOpacity={1} />
-                      <stop offset="100%" stopColor={color} stopOpacity={0.7} />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={CustomLabel}
-                  outerRadius="85%"
-                  innerRadius="35%"
-                  fill="#8884d8"
-                  dataKey="amount"
-                  stroke="rgba(255,255,255,0.8)"
-                  strokeWidth={2}
-                  animationBegin={0}
-                  animationDuration={1500}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={`url(#gradient-${index % MODERN_COLORS.length})`}
-                      style={{
-                        filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.15))',
+      <CardContent className="p-4">
+        {/* Chart and Legend Container */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Chart Section */}
+          <div className="lg:col-span-2">
+            <div className="relative h-[300px] w-full">
+              <ChartContainer config={chartConfig} className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <defs>
+                      {MODERN_COLORS.map((color, index) => (
+                        <linearGradient key={index} id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor={color} stopOpacity={1} />
+                          <stop offset="100%" stopColor={color} stopOpacity={0.7} />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={CustomLabel}
+                      outerRadius="85%"
+                      innerRadius="35%"
+                      fill="#8884d8"
+                      dataKey="amount"
+                      stroke="rgba(255,255,255,0.8)"
+                      strokeWidth={2}
+                      animationBegin={0}
+                      animationDuration={1500}
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={`url(#gradient-${index % MODERN_COLORS.length})`}
+                          style={{
+                            filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.15))',
+                          }}
+                        />
+                      ))}
+                    </Pie>
+                    <ChartTooltip 
+                      content={<ChartTooltipContent className="bg-background/95 backdrop-blur-sm border border-border/50 shadow-xl rounded-xl p-4" />}
+                      formatter={(value: any, name: string) => [
+                        `$${Number(value).toFixed(2)}`, 
+                        name
+                      ]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
+          </div>
+
+          {/* Legend Section */}
+          <div className="lg:col-span-1">
+            <div className="h-full flex flex-col">
+              <h4 className="font-semibold text-base text-foreground mb-4">Categories</h4>
+              <div className="space-y-3 flex-1">
+                {categoryData.map((item, index) => (
+                  <div 
+                    key={item.category} 
+                    className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-card/50 to-accent/20 border border-border/30 hover:border-primary/40 hover:shadow-md transition-all duration-300"
+                  >
+                    <div 
+                      className="w-4 h-4 rounded-full shadow-lg border-2 border-white/20 flex-shrink-0" 
+                      style={{ 
+                        backgroundColor: MODERN_COLORS[index % MODERN_COLORS.length],
                       }}
                     />
-                  ))}
-                </Pie>
-                <ChartTooltip 
-                  content={<ChartTooltipContent className="bg-background/95 backdrop-blur-sm border border-border/50 shadow-xl rounded-xl p-4" />}
-                  formatter={(value: any, name: string) => [
-                    `$${Number(value).toFixed(2)}`, 
-                    name
-                  ]}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-foreground text-sm truncate">
+                        {item.category}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ${item.amount.toFixed(2)} ({item.percentage}%)
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Legend Section */}
-        <CustomLegend />
       </CardContent>
     </Card>
   );
