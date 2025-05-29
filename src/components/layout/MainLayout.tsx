@@ -229,9 +229,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                    Privacy
-                  </a>
+                  <Link to="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors">
+                    Privacy Policy
+                  </Link>
                 </li>
               </ul>
             </div>
