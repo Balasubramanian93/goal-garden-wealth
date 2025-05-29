@@ -6,14 +6,9 @@ import {
   User,
   LogIn,
   LogOut,
-  Moon,
-  Sun,
-  Settings,
-  Layout
+  Settings
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/contexts/ThemeContext";
-import { Toggle } from "@/components/ui/toggle";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -23,20 +18,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import ResponsiveNavigation from "./ResponsiveNavigation";
-import WidgetCustomizationPanel from "@/components/dashboard/WidgetCustomizationPanel";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const isAuthenticated = !!user;
   
@@ -82,21 +67,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
-            {/* Theme Toggle */}
-            <Toggle 
-              pressed={theme === 'dark'}
-              onPressedChange={toggleTheme}
-              aria-label="Toggle theme"
-              size="sm"
-              className="hidden sm:flex"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Toggle>
-
             {/* Auth Section - Desktop only */}
             {isAuthenticated ? (
               <div className="hidden lg:flex items-center gap-3">
@@ -122,42 +92,8 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                     <DropdownMenuItem asChild>
                       <Link to="/profile">
                         <Settings className="mr-2 h-4 w-4" />
-                        <span>View Profile</span>
+                        <span>Settings</span>
                       </Link>
-                    </DropdownMenuItem>
-                    
-                    {/* Dashboard Customization Option */}
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                          <Layout className="mr-2 h-4 w-4" />
-                          <span>Customize Dashboard</span>
-                        </DropdownMenuItem>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Dashboard Settings</DialogTitle>
-                          <DialogDescription>
-                            Customize your dashboard widgets and preferences
-                          </DialogDescription>
-                        </DialogHeader>
-                        <WidgetCustomizationPanel />
-                      </DialogContent>
-                    </Dialog>
-
-                    {/* Theme Toggle in Dropdown for Mobile */}
-                    <DropdownMenuItem onClick={toggleTheme} className="sm:hidden">
-                      {theme === 'dark' ? (
-                        <>
-                          <Sun className="mr-2 h-4 w-4" />
-                          <span>Light Mode</span>
-                        </>
-                      ) : (
-                        <>
-                          <Moon className="mr-2 h-4 w-4" />
-                          <span>Dark Mode</span>
-                        </>
-                      )}
                     </DropdownMenuItem>
                     
                     <DropdownMenuSeparator />

@@ -15,15 +15,6 @@ const Index = () => {
       {user ? (
         // Dashboard for authenticated users
         <section className="py-6 container">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {user?.user_metadata?.first_name || user?.email?.split('@')[0]}!
-            </h1>
-            <p className="text-muted-foreground">
-              Here's your financial overview for today
-            </p>
-          </div>
-          
           <DashboardWidgets />
         </section>
       ) : (
