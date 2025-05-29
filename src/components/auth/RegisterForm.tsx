@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Form,
   FormControl,
@@ -16,6 +17,8 @@ import {
 } from "@/components/ui/form";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 const formSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
@@ -23,6 +26,13 @@ const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string().min(6, { message: "Confirm your password" }),
+  privacyConsent: z.boolean().refine(val => val === true, {
+    message: "You must accept the privacy policy to continue"
+  }),
+  dataProcessingConsent: z.boolean().refine(val => val === true, {
+    message: "You must consent to data processing to continue"
+  }),
+  marketingConsent: z.boolean().optional()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -44,21 +54,51 @@ const RegisterForm = () => {
       email: "",
       password: "",
       confirmPassword: "",
+      privacyConsent: false,
+      dataProcessingConsent: false,
+      marketingConsent: false,
     },
   });
+
+  const recordConsent = async (userId: string, consents: { type: string; consented: boolean }[]) => {
+    try {
+      const consentRecords = consents.map(consent => ({
+        user_id: userId,
+        consent_type: consent.type,
+        consented: consent.consented,
+        ip_address: 'unknown' // In production, you'd capture the actual IP
+      }));
+
+      await supabase.from('user_consents').insert(consentRecords);
+    } catch (error) {
+      console.error('Error recording consent:', error);
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
       setError(null);
-      // Pass first and last name as additional metadata
+      
+      // Sign up the user
       await signUp(data.email, data.password, {
         first_name: data.firstName,
         last_name: data.lastName
       });
+
+      // Get the current user to record consent
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        await recordConsent(user.id, [
+          { type: 'privacy_policy', consented: data.privacyConsent },
+          { type: 'data_processing', consented: data.dataProcessingConsent },
+          { type: 'marketing', consented: data.marketingConsent || false }
+        ]);
+      }
+      
       navigate("/login");
     } catch (err: any) {
-      // Error is already handled by useAuth and shown in toast
       setError("Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
@@ -146,6 +186,77 @@ const RegisterForm = () => {
               </FormItem>
             )}
           />
+
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="text-sm font-medium">Data Protection & Privacy</h3>
+            
+            <FormField
+              control={form.control}
+              name="privacyConsent"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm">
+                      I agree to the{" "}
+                      <Link to="/privacy-policy" className="text-primary hover:underline" target="_blank">
+                        Privacy Policy
+                      </Link>{" "}
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dataProcessingConsent"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm">
+                      I consent to the processing of my personal data for account management and service provision{" "}
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="marketingConsent"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm">
+                      I agree to receive marketing communications and newsletters (optional)
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
           
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Creating account..." : "Create account"}

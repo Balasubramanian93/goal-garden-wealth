@@ -93,6 +93,36 @@ export type Database = {
           },
         ]
       }
+      data_export_requests: {
+        Row: {
+          completed_at: string | null
+          expires_at: string
+          export_data: Json | null
+          id: string
+          requested_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          expires_at?: string
+          export_data?: Json | null
+          id?: string
+          requested_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          expires_at?: string
+          export_data?: Json | null
+          id?: string
+          requested_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       expenses: {
         Row: {
           amount: number
@@ -375,6 +405,39 @@ export type Database = {
         Update: {
           created_at?: string
           id?: number
+        }
+        Relationships: []
+      }
+      user_consents: {
+        Row: {
+          consent_date: string
+          consent_type: string
+          consented: boolean
+          created_at: string
+          id: string
+          ip_address: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consent_date?: string
+          consent_type: string
+          consented?: boolean
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consent_date?: string
+          consent_type?: string
+          consented?: boolean
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
