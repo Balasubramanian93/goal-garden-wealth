@@ -39,8 +39,8 @@ const ResponsiveNavigation = () => {
     : user?.email?.split('@')[0];
 
   // Get user initials for avatar fallback
-  const userInitials = user?.user_metadata?.first_name 
-    ? `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name?.charAt(0) || ''}`
+  const userInitials = user?.user_metadata?.first_name && user?.user_metadata?.last_name
+    ? `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name.charAt(0)}`
     : user?.email?.charAt(0).toUpperCase() || 'U';
 
   const isActive = (path: string) => {

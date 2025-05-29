@@ -21,8 +21,8 @@ const Profile = () => {
     email: user?.email || "",
   });
 
-  const userInitials = user?.user_metadata?.first_name 
-    ? `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name?.charAt(0) || ''}`
+  const userInitials = formData.firstName && formData.lastName
+    ? `${formData.firstName.charAt(0)}${formData.lastName.charAt(0)}`
     : user?.email?.charAt(0).toUpperCase() || 'U';
 
   const handleInputChange = (field: string, value: string) => {
