@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +16,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Demo from "./pages/Demo";
 import Tools from "./pages/Tools";
+import Profile from "./pages/Profile";
 import EditGoalPage from "./pages/EditGoalPage";
 import GoalDetailsPage from "./pages/GoalDetailsPage";
 import FDCalculatorPage from "./pages/calculators/FDCalculatorPage";
@@ -117,6 +119,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <BudgetDetail />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 } 
               />

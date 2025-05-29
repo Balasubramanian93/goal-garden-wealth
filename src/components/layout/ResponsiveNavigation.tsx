@@ -12,11 +12,13 @@ import {
   TrendingUp,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  Settings
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Sheet,
   SheetContent,
@@ -35,6 +37,11 @@ const ResponsiveNavigation = () => {
   const displayName = user?.user_metadata?.first_name 
     ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`
     : user?.email?.split('@')[0];
+
+  // Get user initials for avatar fallback
+  const userInitials = user?.user_metadata?.first_name 
+    ? `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name?.charAt(0) || ''}`
+    : user?.email?.charAt(0).toUpperCase() || 'U';
 
   const isActive = (path: string) => {
     if (path === "/" && location.pathname === "/") return true;
@@ -147,10 +154,26 @@ const ResponsiveNavigation = () => {
               <div className="pt-4 border-t space-y-2">
                 {isAuthenticated ? (
                   <>
-                    <div className="px-3 py-2 text-sm">
-                      <span className="text-muted-foreground">Logged in as </span>
-                      <span className="font-medium">{displayName}</span>
+                    <div className="flex items-center gap-3 px-3 py-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user?.user_metadata?.avatar_url} alt={displayName} />
+                        <AvatarFallback>{userInitials}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{displayName}</span>
+                        <span className="text-xs text-muted-foreground">{user?.email}</span>
+                      </div>
                     </div>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start" 
+                      asChild
+                    >
+                      <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        View Profile
+                      </Link>
+                    </Button>
                     <Button 
                       variant="ghost" 
                       className="w-full justify-start" 
