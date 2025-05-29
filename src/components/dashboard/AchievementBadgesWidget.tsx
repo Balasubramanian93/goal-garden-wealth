@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Target, TrendingUp, Award } from "lucide-react";
@@ -14,11 +13,11 @@ const AchievementBadgesWidget = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('portfolio_assets')
-        .select('quantity, current_price')
+        .select('value')
         .order('id', { ascending: true });
       
       if (error) throw error;
-      return data?.reduce((total, asset) => total + (asset.quantity * asset.current_price), 0) || 0;
+      return data?.reduce((total, asset) => total + asset.value, 0) || 0;
     },
     enabled: !!user,
   });
