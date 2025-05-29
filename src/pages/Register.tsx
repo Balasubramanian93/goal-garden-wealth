@@ -10,7 +10,7 @@ const Register = () => {
   
   // Redirect if already logged in
   if (user) {
-    return <Navigate to="/portfolio" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (

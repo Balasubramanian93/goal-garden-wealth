@@ -44,7 +44,7 @@ const LoginForm = () => {
       setIsLoading(true);
       setError(null);
       await signIn(data.email, data.password);
-      navigate("/portfolio");
+      navigate("/");
     } catch (err: any) {
       // Error is already handled by useAuth and shown in toast
       setError("Failed to login. Please check your credentials.");
