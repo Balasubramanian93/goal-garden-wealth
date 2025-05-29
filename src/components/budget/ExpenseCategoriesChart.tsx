@@ -94,20 +94,20 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
     return (
       <div className="flex flex-col gap-3">
         <h4 className="font-semibold text-base text-foreground mb-2">Categories</h4>
-        <div className="grid gap-3 max-h-96 overflow-y-auto pr-2">
+        <div className="grid gap-2 max-h-80 overflow-y-auto pr-2">
           {categoryData.map((item, index) => (
             <div 
               key={item.category} 
-              className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-card/50 to-accent/20 border border-border/30 hover:border-primary/40 hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer backdrop-blur-sm"
+              className="group flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-card/50 to-accent/20 border border-border/30 hover:border-primary/40 hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer backdrop-blur-sm"
             >
               <div className="flex items-center gap-3">
                 <div 
-                  className="w-4 h-4 rounded-full shadow-lg border-2 border-white/20" 
+                  className="w-3 h-3 rounded-full shadow-lg border-2 border-white/20" 
                   style={{ 
                     backgroundColor: MODERN_COLORS[index % MODERN_COLORS.length],
                   }}
                 />
-                <span className="text-sm font-medium text-foreground truncate max-w-32 group-hover:text-primary transition-colors duration-300">
+                <span className="text-sm font-medium text-foreground truncate max-w-24 group-hover:text-primary transition-colors duration-300">
                   {item.category}
                 </span>
               </div>
@@ -129,29 +129,29 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
   if (expenses.length === 0) {
     return (
       <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-accent/5">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border/50">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border/50 pb-4">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-primary/10 shadow-lg">
               <TrendingUp className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+              <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
                 Expense Categories
               </CardTitle>
-              <CardDescription className="text-muted-foreground font-medium text-base">
+              <CardDescription className="text-muted-foreground font-medium">
                 Breakdown of your expenses by category for {currentPeriodName}
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-12">
-          <div className="flex flex-col items-center justify-center h-80 text-center space-y-6">
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center justify-center h-60 text-center space-y-6">
             <div className="p-8 rounded-full bg-gradient-to-br from-muted/50 to-muted/30 shadow-lg">
-              <DollarSign className="h-16 w-16 text-muted-foreground" />
+              <DollarSign className="h-12 w-12 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-xl font-semibold text-muted-foreground mb-2">No expenses to display</p>
-              <p className="text-base text-muted-foreground/80">Start adding expenses to see your spending breakdown</p>
+              <p className="text-lg font-semibold text-muted-foreground mb-2">No expenses to display</p>
+              <p className="text-sm text-muted-foreground/80">Start adding expenses to see your spending breakdown</p>
             </div>
           </div>
         </CardContent>
@@ -161,23 +161,23 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
 
   return (
     <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-accent/5 hover:shadow-2xl transition-shadow duration-500">
-      <CardHeader className="bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5 border-b border-border/50 pb-6">
+      <CardHeader className="bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5 border-b border-border/50 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-lg">
               <TrendingUp className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+              <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
                 Expense Categories
               </CardTitle>
-              <CardDescription className="text-muted-foreground font-medium text-base">
+              <CardDescription className="text-muted-foreground font-medium">
                 Spending breakdown for {currentPeriodName}
               </CardDescription>
             </div>
           </div>
-          <div className="text-right bg-gradient-to-br from-primary/5 to-primary/10 p-4 rounded-xl border border-primary/20">
-            <div className="text-3xl font-bold text-primary">
+          <div className="text-right bg-gradient-to-br from-primary/5 to-primary/10 p-3 rounded-xl border border-primary/20">
+            <div className="text-2xl font-bold text-primary">
               ${totalExpenses.toFixed(2)}
             </div>
             <div className="text-sm text-muted-foreground font-medium">
@@ -188,10 +188,10 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
       </CardHeader>
       
       <CardContent className="p-0">
-        <div className="grid lg:grid-cols-5 min-h-[600px]">
+        <div className="grid lg:grid-cols-5 min-h-[500px]">
           {/* Chart Section - Takes up more space */}
-          <div className="lg:col-span-3 p-8 bg-gradient-to-br from-background to-accent/5">
-            <div className="relative h-[500px] w-full">
+          <div className="lg:col-span-3 p-6 bg-gradient-to-br from-background to-accent/5">
+            <div className="relative h-[400px] w-full">
               <ChartContainer config={chartConfig} className="h-full w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -209,8 +209,8 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
                       cy="50%"
                       labelLine={false}
                       label={CustomLabel}
-                      outerRadius="85%"
-                      innerRadius="30%"
+                      outerRadius="90%"
+                      innerRadius="40%"
                       fill="#8884d8"
                       dataKey="amount"
                       stroke="rgba(255,255,255,0.8)"
@@ -238,23 +238,11 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
                   </PieChart>
                 </ResponsiveContainer>
               </ChartContainer>
-              
-              {/* Center total display */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center bg-background/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-border/30">
-                  <div className="text-3xl font-bold text-foreground mb-1">
-                    ${totalExpenses.toFixed(0)}
-                  </div>
-                  <div className="text-sm text-muted-foreground font-medium uppercase tracking-wider">
-                    Total Spent
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
           {/* Legend Section - Better organized */}
-          <div className="lg:col-span-2 p-8 bg-gradient-to-br from-accent/5 to-background border-l border-border/30">
+          <div className="lg:col-span-2 p-6 bg-gradient-to-br from-accent/5 to-background border-l border-border/30">
             <ModernLegend />
           </div>
         </div>
