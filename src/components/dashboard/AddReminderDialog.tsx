@@ -28,6 +28,7 @@ const AddReminderDialog = ({ onReminderAdded }: AddReminderDialogProps) => {
   const [priority, setPriority] = useState("medium");
   const [reminderType, setReminderType] = useState("one-time");
   const [isLoading, setIsLoading] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +74,11 @@ const AddReminderDialog = ({ onReminderAdded }: AddReminderDialogProps) => {
     }
   };
 
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    setDueDate(selectedDate);
+    setCalendarOpen(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -113,7 +119,7 @@ const AddReminderDialog = ({ onReminderAdded }: AddReminderDialogProps) => {
 
           <div className="space-y-2">
             <Label>Due Date *</Label>
-            <Popover>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -130,7 +136,7 @@ const AddReminderDialog = ({ onReminderAdded }: AddReminderDialogProps) => {
                 <Calendar
                   mode="single"
                   selected={dueDate}
-                  onSelect={setDueDate}
+                  onSelect={handleDateSelect}
                   disabled={(date) => {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
