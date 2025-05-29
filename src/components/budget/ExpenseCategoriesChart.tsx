@@ -95,7 +95,7 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
           <div className="w-2 h-2 rounded-full bg-gradient-to-r from-primary to-primary/60"></div>
           <h4 className="font-semibold text-sm text-foreground">Expense Breakdown</h4>
         </div>
-        <div className="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+        <div className="space-y-2 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-border hover:scrollbar-thumb-primary scrollbar-track-transparent">
           {categoryData.map((item, index) => (
             <div 
               key={item.category} 
@@ -262,22 +262,6 @@ const ExpenseCategoriesChart = ({ expenses, currentPeriodName }: ExpenseCategori
           </div>
         </div>
       </CardContent>
-      
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: hsl(var(--border));
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: hsl(var(--primary));
-        }
-      `}</style>
     </Card>
   );
 };
