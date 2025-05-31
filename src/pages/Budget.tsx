@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +22,7 @@ const Budget = () => {
     budgetHistory,
     currentBudgetPeriod,
     currentPeriodName,
+    currentMonthYear,
     addExpense,
     updateExpense,
     deleteExpense,
@@ -42,18 +42,23 @@ const Budget = () => {
   const [isUpdatingIncome, setIsUpdatingIncome] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get unique years from budget history
-  const uniqueYears = React.useMemo(() => {
-    const years = [...new Set(budgetHistory.map(item => item.period.split('-')[0]))];
-    return ['All', ...years.sort((a, b) => parseInt(b) - parseInt(a))];
-  }, [budgetHistory]);
+  // Filter out current month from budget history - only show past periods
+  const pastBudgetHistory = React.useMemo(() => {
+    return budgetHistory.filter(item => item.period !== currentMonthYear);
+  }, [budgetHistory, currentMonthYear]);
 
-  // Filter budget history by selected year
+  // Get unique years from past budget history only
+  const uniqueYears = React.useMemo(() => {
+    const years = [...new Set(pastBudgetHistory.map(item => item.period.split('-')[0]))];
+    return ['All', ...years.sort((a, b) => parseInt(b) - parseInt(a))];
+  }, [pastBudgetHistory]);
+
+  // Filter past budget history by selected year
   const filteredHistory = React.useMemo(() => {
     return selectedYear === 'All'
-      ? budgetHistory
-      : budgetHistory.filter(item => item.period.split('-')[0] === selectedYear);
-  }, [budgetHistory, selectedYear]);
+      ? pastBudgetHistory
+      : pastBudgetHistory.filter(item => item.period.split('-')[0] === selectedYear);
+  }, [pastBudgetHistory, selectedYear]);
 
   const displayedHistory = React.useMemo(() => {
     return filteredHistory.slice(0, visibleHistoryCount);
@@ -62,26 +67,6 @@ const Budget = () => {
   const displayedExpenses = React.useMemo(() => {
     return currentMonthExpenses.slice(0, visibleExpensesCount);
   }, [currentMonthExpenses, visibleExpensesCount]);
-
-  const handleShowMore = () => {
-    setVisibleHistoryCount(prevCount => prevCount + 3);
-  };
-
-  const handleShowMoreExpenses = () => {
-    setVisibleExpensesCount(prevCount => prevCount + 3);
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setSelectedFiles(prevFiles => [...prevFiles, ...Array.from(event.target.files)]);
-      setUploadStatus('');
-      if(fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleRemoveFile = (fileToRemove: File) => {
-    setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
-  };
 
   // Enhanced OCR function with improved text processing
   const extractReceiptData = async (file: File): Promise<{ shop: string; amount: number; date: string; category: string; ocrText?: string }> => {
@@ -444,7 +429,7 @@ const Budget = () => {
               fileInputRef={fileInputRef}
             /> */}
 
-            {/* Budget History */}
+            {/* Budget History - Only show past periods */}
             <BudgetHistoryCard
               uniqueYears={uniqueYears}
               selectedYear={selectedYear}
