@@ -24,6 +24,8 @@ const ExpensesList = ({
   onDeleteExpense,
   isDeleting
 }: ExpensesListProps) => {
+  console.log('ExpensesList rendering with expenses:', currentMonthExpenses);
+
   return (
     <Card>
       <CardHeader>
@@ -36,15 +38,18 @@ const ExpensesList = ({
             <p className="text-muted-foreground text-center py-8">No expenses recorded yet.</p>
           ) : (
             <>
-              {displayedExpenses.map((expense) => (
-                <ExpenseItem 
-                  key={expense.id} 
-                  expense={expense} 
-                  onUpdate={onUpdateExpense}
-                  onDelete={onDeleteExpense}
-                  isDeleting={isDeleting}
-                />
-              ))}
+              {displayedExpenses.map((expense) => {
+                console.log('Rendering expense item:', expense);
+                return (
+                  <ExpenseItem 
+                    key={expense.id} 
+                    expense={expense} 
+                    onUpdate={onUpdateExpense}
+                    onDelete={onDeleteExpense}
+                    isDeleting={isDeleting}
+                  />
+                );
+              })}
               {currentMonthExpenses.length > displayedExpenses.length && (
                 <Button variant="link" className="w-full mt-4" onClick={onShowMore}>
                   Show More ({currentMonthExpenses.length - displayedExpenses.length} remaining)

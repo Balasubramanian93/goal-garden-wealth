@@ -29,6 +29,8 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  console.log('ExpenseItem rendering with expense:', expense);
+
   const handleSave = () => {
     const newAmount = parseFloat(editAmount);
     if (!isNaN(newAmount) && newAmount > 0 && onUpdate) {
@@ -50,10 +52,15 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
   };
 
   return (
@@ -63,7 +70,7 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
           <div className="flex items-center gap-3">
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="font-medium truncate">{expense.shop}</p>
+                <p className="font-medium truncate">{expense.shop || 'Unknown Shop'}</p>
                 {expense.receipt_id && (
                   <Button
                     variant="ghost"
@@ -77,7 +84,7 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
                 )}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>{expense.category}</span>
+                <span>{expense.category || 'Uncategorized'}</span>
                 <span>•</span>
                 <span>{formatDate(expense.date)}</span>
               </div>
@@ -103,7 +110,7 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold">${expense.amount.toFixed(2)}</span>
+                  <span className="font-semibold">${(expense.amount || 0).toFixed(2)}</span>
                   {onUpdate && (
                     <Button 
                       size="sm" 
@@ -132,18 +139,20 @@ const ExpenseItem = ({ expense, onUpdate, onDelete, isDeleting }: ExpenseItemPro
         </div>
       </div>
 
-      <ReceiptDetailsDialog
-        isOpen={isReceiptDialogOpen}
-        onOpenChange={setIsReceiptDialogOpen}
-        receiptId={expense.receipt_id}
-      />
+      {expense.receipt_id && (
+        <ReceiptDetailsDialog
+          isOpen={isReceiptDialogOpen}
+          onOpenChange={setIsReceiptDialogOpen}
+          receiptId={expense.receipt_id}
+        />
+      )}
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Expense</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this expense from {expense.shop} for ${expense.amount.toFixed(2)}? This action cannot be undone.
+              Are you sure you want to delete this expense from {expense.shop || 'Unknown Shop'} for ${(expense.amount || 0).toFixed(2)}? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -17,6 +17,9 @@ const Tax = () => {
   const [taxDocuments, setTaxDocuments] = useState<TaxDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log('Tax page rendering, user:', user);
+  console.log('Current month expenses:', currentMonthExpenses);
+
   useEffect(() => {
     if (user) {
       loadTaxDocuments();
@@ -35,15 +38,35 @@ const Tax = () => {
     }
   };
 
-  // Calculate tax-related expenses
-  const taxDeductibleExpenses = currentMonthExpenses.filter(expense => expense.is_tax_deductible);
-  const totalTaxDeductible = taxDeductibleExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  // Calculate tax-related expenses with safe property access
+  const taxDeductibleExpenses = currentMonthExpenses.filter(expense => {
+    try {
+      return expense && expense.is_tax_deductible === true;
+    } catch (error) {
+      console.error('Error filtering tax deductible expenses:', error);
+      return false;
+    }
+  });
 
-  // Group by tax category
+  const totalTaxDeductible = taxDeductibleExpenses.reduce((sum, expense) => {
+    try {
+      return sum + (expense.amount || 0);
+    } catch (error) {
+      console.error('Error calculating total tax deductible:', error);
+      return sum;
+    }
+  }, 0);
+
+  // Group by tax category with safe property access
   const expensesByCategory = taxDeductibleExpenses.reduce((acc, expense) => {
-    const category = expense.tax_category || 'Uncategorized';
-    acc[category] = (acc[category] || 0) + expense.amount;
-    return acc;
+    try {
+      const category = expense.tax_category || 'Uncategorized';
+      acc[category] = (acc[category] || 0) + (expense.amount || 0);
+      return acc;
+    } catch (error) {
+      console.error('Error grouping expenses by category:', error);
+      return acc;
+    }
   }, {} as Record<string, number>);
 
   const availableYears = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString());
@@ -232,9 +255,9 @@ const Tax = () => {
                 {taxDeductibleExpenses.slice(0, 10).map((expense) => (
                   <div key={expense.id} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
                     <div>
-                      <p className="font-medium">{expense.shop}</p>
+                      <p className="font-medium">{expense.shop || 'Unknown Shop'}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm text-muted-foreground">{expense.category}</span>
+                        <span className="text-sm text-muted-foreground">{expense.category || 'Uncategorized'}</span>
                         {expense.tax_category && (
                           <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
                             {expense.tax_category}
@@ -246,9 +269,9 @@ const Tax = () => {
                       </span>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-green-600">${expense.amount.toFixed(2)}</p>
+                      <p className="font-semibold text-green-600">${(expense.amount || 0).toFixed(2)}</p>
                       <p className="text-xs text-muted-foreground">
-                        ~${(expense.amount * 0.22).toFixed(2)} savings
+                        ~${((expense.amount || 0) * 0.22).toFixed(2)} savings
                       </p>
                     </div>
                   </div>
