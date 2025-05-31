@@ -68,6 +68,26 @@ const Budget = () => {
     return currentMonthExpenses.slice(0, visibleExpensesCount);
   }, [currentMonthExpenses, visibleExpensesCount]);
 
+  const handleShowMore = () => {
+    setVisibleHistoryCount(prevCount => prevCount + 3);
+  };
+
+  const handleShowMoreExpenses = () => {
+    setVisibleExpensesCount(prevCount => prevCount + 3);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setSelectedFiles(prevFiles => [...prevFiles, ...Array.from(event.target.files)]);
+      setUploadStatus('');
+      if(fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveFile = (fileToRemove: File) => {
+    setSelectedFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
+  };
+
   // Enhanced OCR function with improved text processing
   const extractReceiptData = async (file: File): Promise<{ shop: string; amount: number; date: string; category: string; ocrText?: string }> => {
     try {
