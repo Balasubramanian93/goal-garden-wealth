@@ -1,38 +1,15 @@
-
-import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useLocation } from "react-router-dom";
 import { 
-  ChartPie,
-  User,
-  LogIn,
-  LogOut,
-  Settings
+  ChartPie
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import ResponsiveNavigation from "./ResponsiveNavigation";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "./AppSidebar";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
   const isAuthenticated = !!user;
-  
-  // Get display name from user metadata if available
-  const displayName = user?.user_metadata?.first_name 
-    ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`
-    : user?.email?.split('@')[0];
-
-  const userInitials = user?.user_metadata?.first_name && user?.user_metadata?.last_name
-    ? `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name.charAt(0)}`
-    : user?.email?.charAt(0).toUpperCase() || 'U';
 
   const shouldShowBreadcrumb = () => {
     const currentPath = location.pathname;
@@ -42,7 +19,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   const getCurrentPageTitle = () => {
     const currentPath = location.pathname;
-    if (currentPath === "/") return "Home";
+    if (currentPath === "/") return "Dashboard";
     if (currentPath.startsWith("/budget")) return "Budget Management";
     if (currentPath.startsWith("/portfolio")) return "Portfolio Overview";
     if (currentPath.startsWith("/goals")) return "Financial Goals";
@@ -52,196 +29,141 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     if (currentPath.startsWith("/login")) return "Login";
     if (currentPath.startsWith("/register")) return "Register";
     if (currentPath.startsWith("/profile")) return "Profile Settings";
+    if (currentPath.startsWith("/tax")) return "Tax Planning";
     return "FinanceBloom";
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-background font-poppins">
-      {/* Modern Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 font-bold text-xl">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <ChartPie className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="hidden sm:inline-block">FinanceBloom</span>
-          </Link>
-          
-          {/* Navigation */}
-          <ResponsiveNavigation />
-
-          {/* Right Side Actions */}
-          <div className="flex items-center gap-3">
-            {/* Auth Section - Desktop only */}
-            {isAuthenticated ? (
-              <div className="hidden lg:flex items-center gap-3">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.user_metadata?.avatar_url} alt={displayName} />
-                        <AvatarFallback>{userInitials}</AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{displayName}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user?.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => signOut()}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <SidebarInset>
+            {/* Top Header with Trigger */}
+            <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <div className="flex h-16 items-center gap-4 px-4">
+                <SidebarTrigger />
+                <div className="flex-1">
+                  <h1 className="text-lg font-semibold">{getCurrentPageTitle()}</h1>
+                </div>
               </div>
-            ) : (
-              <div className="hidden lg:flex items-center gap-2">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/login">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login
-                  </Link>
-                </Button>
-                <Button size="sm" asChild>
-                  <Link to="/register">
-                    <User className="mr-2 h-4 w-4" />
-                    Register
-                  </Link>
-                </Button>
+            </header>
+
+            {/* Page Title Breadcrumb */}
+            {shouldShowBreadcrumb() && (
+              <div className="border-b bg-muted/30">
+                <div className="px-4 py-3">
+                  <p className="text-sm text-muted-foreground">
+                    {location.pathname.startsWith("/goals") && "Set and achieve your financial goals"}
+                    {location.pathname.startsWith("/analytics") && "Analyze your financial performance"}
+                    {location.pathname.startsWith("/tools") && "Calculate and plan your finances"}
+                    {location.pathname.startsWith("/blogs") && "Stay informed with financial insights"}
+                    {location.pathname.startsWith("/profile") && "Manage your account settings"}
+                    {location.pathname.startsWith("/tax") && "Plan and optimize your tax strategy"}
+                  </p>
+                </div>
               </div>
             )}
-          </div>
-        </div>
-      </header>
 
-      {/* Page Title Breadcrumb */}
-      {shouldShowBreadcrumb() && (
-        <div className="border-b bg-muted/30">
-          <div className="container py-3">
-            <h1 className="text-lg font-semibold text-foreground">{getCurrentPageTitle()}</h1>
-            <p className="text-sm text-muted-foreground">
-              {location.pathname.startsWith("/goals") && "Set and achieve your financial goals"}
-              {location.pathname.startsWith("/analytics") && "Analyze your financial performance"}
-              {location.pathname.startsWith("/tools") && "Calculate and plan your finances"}
-              {location.pathname.startsWith("/blogs") && "Stay informed with financial insights"}
-              {location.pathname.startsWith("/profile") && "Manage your account settings"}
-            </p>
-          </div>
-        </div>
-      )}
+            {/* Main content */}
+            <main className="flex-1">
+              {children}
+            </main>
 
-      {/* Main content */}
-      <main className="flex-1">
-        {children}
-      </main>
-
-      {/* Enhanced Footer */}
-      <footer className="border-t py-8 bg-muted/30">
-        <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <ChartPie className="h-5 w-5 text-primary-foreground" />
+            {/* Enhanced Footer */}
+            <footer className="border-t py-8 bg-muted/30">
+              <div className="px-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                        <ChartPie className="h-5 w-5 text-primary-foreground" />
+                      </div>
+                      <h3 className="text-lg font-semibold">FinanceBloom</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Your complete wealth management solution for a secure financial future.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Resources</h3>
+                    <ul className="space-y-2 text-sm">
+                      <li>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                          Financial Blogs
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                          Financial Tools
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                          Investment Guides
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                          Newsletter
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Company</h3>
+                    <ul className="space-y-2 text-sm">
+                      <li>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                          About Us
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                          Contact
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                          Support
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                          Privacy Policy
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Connect</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Stay updated with the latest financial tips and features.
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+                      </a>
+                      <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t mt-8 pt-6 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      &copy; {new Date().getFullYear()} FinanceBloom. All rights reserved.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold">FinanceBloom</h3>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Your complete wealth management solution for a secure financial future.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Resources</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link to="/blogs" className="text-muted-foreground hover:text-primary transition-colors">
-                    Financial Blogs
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/tools" className="text-muted-foreground hover:text-primary transition-colors">
-                    Financial Tools
-                  </Link>
-                </li>
-                <li>
-                  <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                    Investment Guides
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                    Newsletter
-                  </a>
-                </li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                    About Us
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                    Contact
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                    Support
-                  </a>
-                </li>
-                <li>
-                  <Link to="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors">
-                    Privacy Policy
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Connect</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Stay updated with the latest financial tips and features.
-              </p>
-              <div className="flex items-center gap-4">
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
-                </a>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
-                </a>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t mt-8 pt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} FinanceBloom. All rights reserved.
-            </p>
-          </div>
+            </footer>
+          </SidebarInset>
         </div>
-      </footer>
+      </SidebarProvider>
     </div>
   );
 };
