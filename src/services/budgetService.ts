@@ -12,6 +12,10 @@ export type Expense = {
   created_at: string;
   updated_at: string;
   receipt_id?: string | null;
+  is_tax_deductible?: boolean;
+  tax_category?: string | null;
+  business_purpose?: string | null;
+  subcategory?: string | null;
 };
 
 export type BudgetPeriod = {
