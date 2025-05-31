@@ -49,15 +49,26 @@ const BudgetHistoryCard = ({
           {displayedHistory.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">No budget history found.</p>
           ) : (
-            displayedHistory.map((budget) => (
-              <Link key={budget.id} to={`/budget/${budget.id}`} className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/50 transition-colors cursor-pointer">
-                <div>
-                  <p className="font-semibold text-sm">{budget.period_name}</p>
-                  <p className="text-xs text-muted-foreground">Exp: ${budget.total_expenses} | Inc: ${budget.total_income}</p>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </Link>
-            ))
+            displayedHistory.map((budget) => {
+              // Use budget.period as the URL parameter since that's what BudgetDetail expects
+              const budgetParam = budget.period || budget.id;
+              console.log('Budget history item:', { budget, budgetParam });
+              
+              return (
+                <Link 
+                  key={budget.id} 
+                  to={`/budget/${budgetParam}`} 
+                  className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                >
+                  <div>
+                    <p className="font-semibold text-sm">{budget.period_name}</p>
+                    <p className="text-xs text-muted-foreground">Exp: ${budget.total_expenses} | Inc: ${budget.total_income}</p>
+                    <p className="text-xs text-muted-foreground">Period: {budget.period}</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </Link>
+              );
+            })
           )}
         </div>
         {filteredHistory.length > displayedHistory.length && (
