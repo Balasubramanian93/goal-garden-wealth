@@ -26,12 +26,29 @@ const BudgetDetail = () => {
   const { budgetId } = useParams();
   const { user } = useAuth();
 
-  // Get budget period details
+  console.log('BudgetDetail - budgetId from params:', budgetId);
+
+  // Get budget period details - handle both ID and period format
   const { data: budgetPeriod, isLoading: budgetLoading } = useQuery({
     queryKey: ['budget-period', budgetId],
     queryFn: async () => {
+      console.log('Fetching budget periods...');
       const periods = await budgetService.getBudgetPeriods();
-      return periods.find(period => period.id === budgetId);
+      console.log('All budget periods:', periods);
+      
+      // Try to find by ID first, then by period
+      let period = periods.find(p => p.id === budgetId);
+      if (!period) {
+        // If not found by ID, try to find by period (month-year format)
+        period = periods.find(p => p.period === budgetId);
+      }
+      if (!period) {
+        // Try to find by period_name
+        period = periods.find(p => p.period_name === budgetId);
+      }
+      
+      console.log('Found budget period:', period);
+      return period;
     },
     enabled: !!user && !!budgetId,
   });
@@ -39,7 +56,12 @@ const BudgetDetail = () => {
   // Get expenses for this budget period
   const { data: expenses = [], isLoading: expensesLoading } = useQuery({
     queryKey: ['expenses', budgetPeriod?.period],
-    queryFn: () => budgetService.getExpenses(budgetPeriod!.period),
+    queryFn: async () => {
+      console.log('Fetching expenses for period:', budgetPeriod?.period);
+      const expenseData = await budgetService.getExpenses(budgetPeriod!.period);
+      console.log('Fetched expenses:', expenseData);
+      return expenseData;
+    },
     enabled: !!budgetPeriod?.period,
   });
 
@@ -47,16 +69,20 @@ const BudgetDetail = () => {
 
   // Calculate spending breakdown by category
   const spendingBreakdown = React.useMemo(() => {
+    console.log('Calculating spending breakdown with expenses:', expenses);
     const categoryTotals: Record<string, number> = {};
     
     expenses.forEach(expense => {
       categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount;
     });
 
-    return Object.entries(categoryTotals).map(([category, amount]) => ({
+    const breakdown = Object.entries(categoryTotals).map(([category, amount]) => ({
       category,
       amount
     }));
+    
+    console.log('Spending breakdown:', breakdown);
+    return breakdown;
   }, [expenses]);
 
   if (isLoading) {
@@ -75,19 +101,25 @@ const BudgetDetail = () => {
   }
 
   if (!budgetPeriod) {
+    console.log('No budget period found for:', budgetId);
     return (
       <MainLayout>
         <div className="container mx-auto py-8">
           <h1 className="text-3xl font-bold mb-6">Budget Details</h1>
           <Card>
             <CardContent className="pt-6">
-              <p className="text-muted-foreground text-center">Budget period not found.</p>
+              <p className="text-muted-foreground text-center">Budget period not found for: {budgetId}</p>
+              <p className="text-muted-foreground text-center text-sm mt-2">
+                This might be because the budget period hasn't been created yet or the URL parameter doesn't match.
+              </p>
             </CardContent>
           </Card>
         </div>
       </MainLayout>
     );
   }
+
+  console.log('Rendering budget detail with:', { budgetPeriod, expenses, spendingBreakdown });
 
   return (
     <MainLayout>
@@ -136,7 +168,7 @@ const BudgetDetail = () => {
               </div>
             ) : (
               <div className="p-4 border rounded-md text-muted-foreground h-40 flex items-center justify-center">
-                No spending data available for this period
+                No spending data available for this period ({budgetPeriod.period})
               </div>
             )}
           </CardContent>
@@ -146,7 +178,7 @@ const BudgetDetail = () => {
         <Card>
           <CardHeader>
             <CardTitle>Expenses</CardTitle>
-            <CardDescription>Detailed list of transactions for {budgetPeriod.period_name}.</CardDescription>
+            <CardDescription>Detailed list of transactions for {budgetPeriod.period_name} ({expenses.length} expenses found).</CardDescription>
           </CardHeader>
           <CardContent>
             {expenses.length > 0 ? (
@@ -172,7 +204,9 @@ const BudgetDetail = () => {
               </Table>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                No expenses recorded for this period.
+                No expenses recorded for this period ({budgetPeriod.period}).
+                <br />
+                <span className="text-sm">Check if expenses exist for period: {budgetPeriod.period}</span>
               </div>
             )}
           </CardContent>
