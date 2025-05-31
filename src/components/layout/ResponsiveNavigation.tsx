@@ -1,36 +1,37 @@
 
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
+  Menu,
   ChartPie,
+  Wallet,
+  Target,
+  BarChart3,
+  Calculator,
+  BookOpen,
   User,
   LogIn,
   LogOut,
-  BarChart2,
-  Home, 
-  Wallet,
-  TrendingUp,
-  Menu,
-  X,
-  ChevronDown,
-  Settings
+  Settings,
+  Receipt
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 
 const ResponsiveNavigation = () => {
   const { user, signOut } = useAuth();
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const isAuthenticated = !!user;
   
   // Get display name from user metadata if available
@@ -38,171 +39,126 @@ const ResponsiveNavigation = () => {
     ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`
     : user?.email?.split('@')[0];
 
-  // Get user initials for avatar fallback
   const userInitials = user?.user_metadata?.first_name && user?.user_metadata?.last_name
     ? `${user.user_metadata.first_name.charAt(0)}${user.user_metadata.last_name.charAt(0)}`
     : user?.email?.charAt(0).toUpperCase() || 'U';
 
-  const isActive = (path: string) => {
-    if (path === "/" && location.pathname === "/") return true;
-    if (path !== "/" && location.pathname.startsWith(path)) return true;
-    return false;
+  const navigationItems = [
+    { href: "/", label: "Dashboard", icon: ChartPie, requiresAuth: true },
+    { href: "/budget", label: "Budget", icon: Wallet, requiresAuth: true },
+    { href: "/portfolio", label: "Portfolio", icon: BarChart3, requiresAuth: true },
+    { href: "/goals", label: "Goals", icon: Target, requiresAuth: true },
+    { href: "/analytics", label: "Analytics", icon: BarChart3, requiresAuth: true },
+    { href: "/tax", label: "Tax Planning", icon: Receipt, requiresAuth: true },
+    { href: "/tools", label: "Tools", icon: Calculator, requiresAuth: false },
+    { href: "/blogs", label: "Blogs", icon: BookOpen, requiresAuth: false },
+  ];
+
+  const filteredNavItems = navigationItems.filter(item => 
+    !item.requiresAuth || isAuthenticated
+  );
+
+  const isActivePath = (href: string) => {
+    if (href === '/') return location.pathname === '/';
+    return location.pathname.startsWith(href);
   };
 
-  const NavLink = ({ to, children, className, onClick }: {
-    to: string;
-    children: React.ReactNode;
-    className?: string;
-    onClick?: () => void;
-  }) => (
-    <Link
-      to={to}
-      onClick={onClick}
-      className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-        isActive(to)
-          ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:text-foreground hover:bg-accent",
-        className
-      )}
-    >
-      {children}
-    </Link>
+  const NavItems = ({ onItemClick }: { onItemClick?: () => void }) => (
+    <>
+      {filteredNavItems.map((item) => {
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            to={item.href}
+            onClick={onItemClick}
+            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              isActivePath(item.href)
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </>
   );
 
   return (
     <>
       {/* Desktop Navigation */}
-      <div className="hidden lg:flex items-center space-x-1">
-        {isAuthenticated && (
-          <>
-            <NavLink to="/">
-              <Home className="h-4 w-4" />
-              Dashboard
-            </NavLink>
-            <NavLink to="/budget">
-              <Wallet className="h-4 w-4" />
-              Budget
-            </NavLink>
-            <NavLink to="/portfolio">
-              <TrendingUp className="h-4 w-4" />
-              Portfolio
-            </NavLink>
-          </>
-        )}
-      </div>
-
-      {/* Tablet Navigation */}
-      <div className="hidden md:flex lg:hidden items-center space-x-1">
-        {isAuthenticated && (
-          <>
-            <NavLink to="/">
-              <Home className="h-4 w-4" />
-            </NavLink>
-            <NavLink to="/budget">
-              <Wallet className="h-4 w-4" />
-            </NavLink>
-            <NavLink to="/portfolio">
-              <TrendingUp className="h-4 w-4" />
-            </NavLink>
-          </>
-        )}
-      </div>
+      <nav className="hidden md:flex items-center gap-6">
+        <div className="flex items-center gap-1">
+          <NavItems />
+        </div>
+      </nav>
 
       {/* Mobile Navigation */}
-      <div className="md:hidden">
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+      <div className="md:hidden flex items-center gap-2">
+        {/* Mobile Auth Section */}
+        {isAuthenticated ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user?.user_metadata?.avatar_url} alt={displayName} />
+                  <AvatarFallback>{userInitials}</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{displayName}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/profile">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => signOut()}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/login">
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link to="/register">
+                <User className="mr-2 h-4 w-4" />
+                Register
+              </Link>
+            </Button>
+          </div>
+        )}
+
+        {/* Mobile Menu */}
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" className="h-9 w-9 p-0">
               <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-80">
-            <SheetHeader>
-              <SheetTitle className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <ChartPie className="h-5 w-5 text-primary-foreground" />
-                </div>
-                FinanceBloom
-              </SheetTitle>
-            </SheetHeader>
-            
-            <nav className="mt-6 space-y-2">
-              {isAuthenticated && (
-                <>
-                  <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                    <Home className="h-4 w-4" />
-                    Dashboard
-                  </NavLink>
-
-                  <div className="pt-2">
-                    <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Financial Management
-                    </div>
-                    <NavLink to="/budget" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                      <Wallet className="h-4 w-4" />
-                      Budget
-                    </NavLink>
-                    <NavLink to="/portfolio" onClick={() => setIsMobileMenuOpen(false)} className="w-full justify-start">
-                      <TrendingUp className="h-4 w-4" />
-                      Portfolio
-                    </NavLink>
-                  </div>
-                </>
-              )}
-              
-              <div className="pt-4 border-t space-y-2">
-                {isAuthenticated ? (
-                  <>
-                    <div className="flex items-center gap-3 px-3 py-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.user_metadata?.avatar_url} alt={displayName} />
-                        <AvatarFallback>{userInitials}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{displayName}</span>
-                        <span className="text-xs text-muted-foreground">{user?.email}</span>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start" 
-                      asChild
-                    >
-                      <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                        <Settings className="mr-2 h-4 w-4" />
-                        View Profile
-                      </Link>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start" 
-                      onClick={() => {
-                        signOut();
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <div className="space-y-2">
-                    <Button variant="ghost" className="w-full justify-start" asChild>
-                      <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                        <LogIn className="mr-2 h-4 w-4" />
-                        Login
-                      </Link>
-                    </Button>
-                    <Button className="w-full justify-start" asChild>
-                      <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                        <User className="mr-2 h-4 w-4" />
-                        Register
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-              </div>
+          <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+            <nav className="flex flex-col gap-4 mt-4">
+              <NavItems onItemClick={() => setIsSheetOpen(false)} />
             </nav>
           </SheetContent>
         </Sheet>

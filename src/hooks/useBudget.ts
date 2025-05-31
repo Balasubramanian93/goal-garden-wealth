@@ -18,7 +18,7 @@ export const useBudget = () => {
     return now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   });
 
-  // Get current month expenses
+  // Get current month expenses with enhanced fields
   const { data: currentMonthExpenses = [], isLoading: expensesLoading } = useQuery({
     queryKey: ['expenses', currentMonthYear],
     queryFn: () => budgetService.getExpenses(currentMonthYear),
@@ -49,7 +49,7 @@ export const useBudget = () => {
     }
   };
 
-  // Add expense mutation
+  // Enhanced add expense mutation with tax fields
   const addExpenseMutation = useMutation({
     mutationFn: (expense: Omit<Expense, 'id' | 'created_at' | 'updated_at'>) => 
       budgetService.addExpense(expense),
@@ -116,6 +116,10 @@ export const useBudget = () => {
     amount: number;
     date: string;
     category: string;
+    subcategory?: string;
+    is_tax_deductible?: boolean;
+    tax_category?: string;
+    business_purpose?: string;
   }) => {
     const expense: Omit<Expense, 'id' | 'created_at' | 'updated_at'> = {
       ...expenseData,

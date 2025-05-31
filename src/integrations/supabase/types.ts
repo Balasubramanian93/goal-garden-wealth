@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bill_reminders: {
+        Row: {
+          amount: number
+          bill_name: string
+          category: string
+          created_at: string
+          due_date: string
+          frequency: string
+          id: string
+          is_paid: boolean
+          is_recurring: boolean
+          notes: string | null
+          updated_at: string
+          user_id: string
+          vendor_name: string | null
+        }
+        Insert: {
+          amount?: number
+          bill_name: string
+          category?: string
+          created_at?: string
+          due_date: string
+          frequency?: string
+          id?: string
+          is_paid?: boolean
+          is_recurring?: boolean
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          vendor_name?: string | null
+        }
+        Update: {
+          amount?: number
+          bill_name?: string
+          category?: string
+          created_at?: string
+          due_date?: string
+          frequency?: string
+          id?: string
+          is_paid?: boolean
+          is_recurring?: boolean
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          vendor_name?: string | null
+        }
+        Relationships: []
+      }
       budget_periods: {
         Row: {
           created_at: string
@@ -165,37 +213,49 @@ export type Database = {
       expenses: {
         Row: {
           amount: number
+          business_purpose: string | null
           category: string
           created_at: string
           date: string
           id: string
+          is_tax_deductible: boolean | null
           month_year: string
           receipt_id: string | null
           shop: string
+          subcategory: string | null
+          tax_category: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           amount: number
+          business_purpose?: string | null
           category: string
           created_at?: string
           date: string
           id?: string
+          is_tax_deductible?: boolean | null
           month_year: string
           receipt_id?: string | null
           shop: string
+          subcategory?: string | null
+          tax_category?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number
+          business_purpose?: string | null
           category?: string
           created_at?: string
           date?: string
           id?: string
+          is_tax_deductible?: boolean | null
           month_year?: string
           receipt_id?: string | null
           shop?: string
+          subcategory?: string | null
+          tax_category?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -208,6 +268,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      financial_metrics: {
+        Row: {
+          created_at: string
+          credit_score: number | null
+          debt_to_income_ratio: number | null
+          emergency_fund_months: number | null
+          financial_health_score: number | null
+          id: string
+          metric_date: string
+          net_worth: number | null
+          savings_rate: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credit_score?: number | null
+          debt_to_income_ratio?: number | null
+          emergency_fund_months?: number | null
+          financial_health_score?: number | null
+          id?: string
+          metric_date?: string
+          net_worth?: number | null
+          savings_rate?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credit_score?: number | null
+          debt_to_income_ratio?: number | null
+          emergency_fund_months?: number | null
+          financial_health_score?: number | null
+          id?: string
+          metric_date?: string
+          net_worth?: number | null
+          savings_rate?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       goal_investments: {
         Row: {
@@ -285,6 +387,42 @@ export type Database = {
           target_amount?: number
           target_date?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      investment_accounts: {
+        Row: {
+          account_name: string
+          account_type: string
+          cost_basis: number
+          created_at: string
+          current_value: number
+          id: string
+          last_updated: string
+          provider_name: string | null
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          account_type: string
+          cost_basis?: number
+          created_at?: string
+          current_value?: number
+          id?: string
+          last_updated?: string
+          provider_name?: string | null
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          account_type?: string
+          cost_basis?: number
+          created_at?: string
+          current_value?: number
+          id?: string
+          last_updated?: string
+          provider_name?: string | null
           user_id?: string
         }
         Relationships: []
@@ -431,6 +569,91 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      tax_documents: {
+        Row: {
+          created_at: string
+          document_name: string
+          document_type: string
+          expense_id: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          tax_year: number
+          upload_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_name: string
+          document_type: string
+          expense_id?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          tax_year: number
+          upload_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_name?: string
+          document_type?: string
+          expense_id?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          tax_year?: number
+          upload_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_documents_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transaction_tags: {
+        Row: {
+          created_at: string
+          expense_id: string
+          id: string
+          tag_name: string
+          tag_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expense_id: string
+          id?: string
+          tag_name: string
+          tag_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expense_id?: string
+          id?: string
+          tag_name?: string
+          tag_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_tags_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       User: {
         Row: {
