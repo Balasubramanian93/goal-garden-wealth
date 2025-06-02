@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { receiptService, type Receipt } from './receiptService';
 
@@ -30,7 +29,7 @@ export type BudgetPeriod = {
 };
 
 export const budgetService = {
-  // Get expenses for a specific month
+  // Get expenses for a specific month with investment statistics
   async getExpenses(monthYear: string): Promise<Expense[]> {
     const { data, error } = await supabase
       .from('expenses')
@@ -40,6 +39,63 @@ export const budgetService = {
 
     if (error) throw error;
     return data || [];
+  },
+
+  // Get investment statistics for analytics
+  async getInvestmentStatistics(monthYear?: string): Promise<{
+    totalInvestmentAmount: number;
+    investmentsByType: Record<string, number>;
+    investmentCount: number;
+    monthlyInvestmentTrend: Array<{ month: string; amount: number }>;
+  }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    let query = supabase
+      .from('expenses')
+      .select('amount, subcategory, month_year, date')
+      .eq('user_id', user.id)
+      .eq('category', 'Investment')
+      .order('date', { ascending: false });
+
+    if (monthYear) {
+      query = query.eq('month_year', monthYear);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const expenses = data || [];
+    
+    // Calculate statistics
+    const totalInvestmentAmount = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+    const investmentCount = expenses.length;
+    
+    // Group by investment type (subcategory)
+    const investmentsByType = expenses.reduce((acc, exp) => {
+      const type = exp.subcategory || 'Other Investment';
+      acc[type] = (acc[type] || 0) + Number(exp.amount);
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Monthly trend (last 6 months)
+    const monthlyTrend = expenses.reduce((acc, exp) => {
+      const month = exp.month_year;
+      const existing = acc.find(item => item.month === month);
+      if (existing) {
+        existing.amount += Number(exp.amount);
+      } else {
+        acc.push({ month, amount: Number(exp.amount) });
+      }
+      return acc;
+    }, [] as Array<{ month: string; amount: number }>);
+
+    return {
+      totalInvestmentAmount,
+      investmentsByType,
+      investmentCount,
+      monthlyInvestmentTrend: monthlyTrend.slice(0, 6)
+    };
   },
 
   // Add a new expense with optional receipt processing
@@ -301,6 +357,25 @@ export const budgetService = {
       .single();
 
     if (error) throw error;
+
+    // For investment expenses, create a category spending record
+    if (expense.category === 'Investment' && expense.subcategory) {
+      try {
+        await supabase
+          .from('category_spending')
+          .insert({
+            user_id: user.id,
+            expense_id: data.id,
+            category: expense.subcategory, // Use subcategory as the detailed category
+            amount: expense.amount,
+            month_year: expense.month_year,
+          });
+      } catch (error) {
+        console.error('Error creating category spending record:', error);
+        // Continue even if category spending fails
+      }
+    }
+
     return data;
   },
 
