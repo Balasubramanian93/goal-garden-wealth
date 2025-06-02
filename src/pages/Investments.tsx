@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +15,8 @@ import { investmentService, Investment } from "@/services/investmentService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
+type InvestmentType = 'Gold' | 'Equity' | 'Mutual Fund' | 'Emergency Fund' | 'Fixed Deposit' | 'Real Estate' | 'Other';
+
 const Investments = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -24,7 +25,7 @@ const Investments = () => {
 
   const [formData, setFormData] = useState({
     investment_name: '',
-    investment_type: 'Equity' as const,
+    investment_type: 'Equity' as InvestmentType,
     current_value: '',
     quantity: '',
     purchase_price: '',
@@ -218,7 +219,7 @@ const Investments = () => {
                   <Label htmlFor="investment_type">Investment Type</Label>
                   <Select 
                     value={formData.investment_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, investment_type: value as any }))}
+                    onValueChange={(value: InvestmentType) => setFormData(prev => ({ ...prev, investment_type: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />

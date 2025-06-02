@@ -1,3 +1,4 @@
+
 import React from "react"
 import {
   Sheet,
@@ -24,27 +25,24 @@ import {
   Settings,
   FileText,
   User,
-  Briefcase, // Add this import
+  Briefcase,
 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { Switch } from "@/components/ui/switch"
-import { useTheme } from "@/hooks/use-theme"
 import { Label } from "@/components/ui/label"
 import { ModeToggle } from "../ModeToggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export function AppSidebar() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const { setTheme } = useTheme()
 
   const handleLogout = async () => {
     try {
-      await logout()
+      // Handle logout - you may need to implement this in your AuthContext
       navigate("/login")
     } catch (error) {
       console.error("Logout failed:", error)
@@ -63,7 +61,7 @@ export function AppSidebar() {
       icon: Wallet,
     },
     {
-      title: "Investments", // Add this new item
+      title: "Investments",
       url: "/investments",
       icon: Briefcase,
     },
@@ -104,11 +102,6 @@ export function AppSidebar() {
       title: "Profile",
       url: "/profile",
       icon: User,
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings,
     },
   ]
 
@@ -152,7 +145,7 @@ export function AppSidebar() {
                 <div className="flex flex-col">
                   <span className="font-semibold">{user?.email}</span>
                   <span className="text-sm text-muted-foreground">
-                    {user?.first_name} {user?.last_name}
+                    User Profile
                   </span>
                 </div>
               </Link>

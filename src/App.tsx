@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter,
   Routes,
@@ -10,22 +11,23 @@ import Goals from "./pages/Goals";
 import Tools from "./pages/Tools";
 import Tax from "./pages/Tax";
 import Blogs from "./pages/Blogs";
-import SettingsPage from "./pages/SettingsPage";
 import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import { AuthProvider } from "./contexts/AuthContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Portfolio from "./pages/Portfolio";
 import BudgetDetail from "./pages/BudgetDetail";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Investments from "./pages/Investments";
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <QueryClient>
+        <QueryClientProvider client={queryClient}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/register" element={<Register />} />
@@ -38,11 +40,10 @@ function App() {
             <Route path="/tools" element={<ProtectedRoute><Tools /></ProtectedRoute>} />
             <Route path="/tax" element={<ProtectedRoute><Tax /></ProtectedRoute>} />
             <Route path="/blogs" element={<Blogs />} />
-            <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/investments" element={<ProtectedRoute><Investments /></ProtectedRoute>} />
           </Routes>
-        </QueryClient>
+        </QueryClientProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -23,7 +23,7 @@ export const investmentService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as Investment[];
   },
 
   async addInvestment(investment: Omit<Investment, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Investment> {
@@ -44,7 +44,7 @@ export const investmentService = {
     // Update net worth after adding investment
     await this.updateNetWorth();
     
-    return data;
+    return data as Investment;
   },
 
   async updateInvestment(id: string, updates: Partial<Investment>): Promise<void> {
