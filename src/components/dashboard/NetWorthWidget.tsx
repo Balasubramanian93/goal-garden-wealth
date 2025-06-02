@@ -6,11 +6,13 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { investmentService } from "@/services/investmentService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBudget } from "@/hooks/useBudget";
 
 const NetWorthWidget = () => {
   const { user } = useAuth();
+  const { currentBudgetPeriod, isLoading: budgetLoading } = useBudget();
 
-  const { data: netWorth = 0, isLoading: netWorthLoading } = useQuery({
+  const { data: investmentNetWorth = 0, isLoading: netWorthLoading } = useQuery({
     queryKey: ['net-worth'],
     queryFn: () => investmentService.calculateNetWorth(),
     enabled: !!user,
@@ -28,9 +30,17 @@ const NetWorthWidget = () => {
     enabled: !!user,
   });
 
-  // Calculate change from previous period
+  // Calculate remaining budget with fallback
+  const totalIncome = currentBudgetPeriod?.total_income || 0;
+  const totalExpenses = currentBudgetPeriod?.total_expenses || 0;
+  const remainingBudget = Math.max(0, totalIncome - totalExpenses); // Only positive values
+
+  // Calculate total net worth including remaining budget
+  const totalNetWorth = investmentNetWorth + remainingBudget;
+
+  // Calculate change from previous period (using investment net worth only for comparison)
   const previousNetWorth = netWorthHistory[1]?.net_worth || 0;
-  const netWorthChange = netWorth - previousNetWorth;
+  const netWorthChange = investmentNetWorth - previousNetWorth;
   const netWorthChangePercent = previousNetWorth > 0 ? (netWorthChange / previousNetWorth) * 100 : 0;
   const isPositiveChange = netWorthChange >= 0;
 
@@ -43,7 +53,7 @@ const NetWorthWidget = () => {
     return acc;
   }, {} as Record<string, number>);
 
-  if (netWorthLoading || historyLoading || investmentsLoading) {
+  if (netWorthLoading || historyLoading || investmentsLoading || budgetLoading) {
     return (
       <Card>
         <CardHeader>
@@ -70,7 +80,7 @@ const NetWorthWidget = () => {
             <Wallet className="h-5 w-5 text-primary" />
             Net Worth
           </CardTitle>
-          <CardDescription>Total value of your investments</CardDescription>
+          <CardDescription>Investments + Available Budget</CardDescription>
         </div>
         {isPositiveChange ? (
           <TrendingUp className="h-5 w-5 text-green-500" />
@@ -82,7 +92,7 @@ const NetWorthWidget = () => {
         <div className="space-y-4">
           <div className="text-center">
             <div className="text-3xl font-bold text-primary">
-              ₹{netWorth.toLocaleString()}
+              ₹{totalNetWorth.toLocaleString()}
             </div>
             {previousNetWorth > 0 && (
               <div className={`text-sm ${isPositiveChange ? 'text-green-600' : 'text-red-600'}`}>
@@ -92,19 +102,33 @@ const NetWorthWidget = () => {
             )}
           </div>
 
-          {Object.keys(investmentsByType).length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Investment Breakdown:</p>
-              {Object.entries(investmentsByType).map(([type, value]) => (
-                <div key={type} className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">{type}</span>
-                  <span className="font-medium">₹{value.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
           <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">Breakdown:</p>
+            
+            {/* Investment breakdown */}
+            {Object.entries(investmentsByType).map(([type, value]) => (
+              <div key={type} className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">{type}</span>
+                <span className="font-medium">₹{value.toLocaleString()}</span>
+              </div>
+            ))}
+            
+            {/* Remaining budget */}
+            {remainingBudget > 0 && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Available Budget</span>
+                <span className="font-medium">₹{remainingBudget.toLocaleString()}</span>
+              </div>
+            )}
+            
+            {/* Total line */}
+            <div className="flex justify-between items-center text-sm border-t pt-2 mt-2">
+              <span className="font-medium">Total Net Worth</span>
+              <span className="font-bold text-primary">₹{totalNetWorth.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2">
             <Button asChild size="sm" className="w-full h-9">
               <Link to="/portfolio" className="flex items-center justify-center gap-2 px-3">
                 <span className="whitespace-nowrap">View Portfolio</span>
