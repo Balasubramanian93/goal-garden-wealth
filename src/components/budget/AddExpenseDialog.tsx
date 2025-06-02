@@ -54,6 +54,7 @@ const investmentSubcategories = [
   'Crypto',
   'Real Estate',
   'FD/RD',
+  'SSY',
   'Other Investment'
 ];
 
