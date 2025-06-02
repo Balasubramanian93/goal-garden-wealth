@@ -217,6 +217,7 @@ export type Database = {
           category: string
           created_at: string
           date: string
+          exclude_from_networth: boolean | null
           id: string
           is_tax_deductible: boolean | null
           month_year: string
@@ -233,6 +234,7 @@ export type Database = {
           category: string
           created_at?: string
           date: string
+          exclude_from_networth?: boolean | null
           id?: string
           is_tax_deductible?: boolean | null
           month_year: string
@@ -249,6 +251,7 @@ export type Database = {
           category?: string
           created_at?: string
           date?: string
+          exclude_from_networth?: boolean | null
           id?: string
           is_tax_deductible?: boolean | null
           month_year?: string
