@@ -104,17 +104,17 @@ const NetWorthWidget = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full">
-            <Button asChild size="sm" className="w-full">
-              <Link to="/portfolio" className="flex items-center justify-center gap-2">
-                <span>View Portfolio</span>
-                <ArrowRight className="h-3 w-3" />
+          <div className="space-y-2">
+            <Button asChild size="sm" className="w-full h-9">
+              <Link to="/portfolio" className="flex items-center justify-center gap-2 px-3">
+                <span className="whitespace-nowrap">View Portfolio</span>
+                <ArrowRight className="h-3 w-3 flex-shrink-0" />
               </Link>
             </Button>
-            <Button asChild size="sm" variant="outline" className="w-full">
-              <Link to="/investments" className="flex items-center justify-center gap-2">
-                <span>Manage Investments</span>
-                <ArrowRight className="h-3 w-3" />
+            <Button asChild size="sm" variant="outline" className="w-full h-9">
+              <Link to="/investments" className="flex items-center justify-center gap-2 px-3">
+                <span className="whitespace-nowrap">Manage Investments</span>
+                <ArrowRight className="h-3 w-3 flex-shrink-0" />
               </Link>
             </Button>
           </div>
