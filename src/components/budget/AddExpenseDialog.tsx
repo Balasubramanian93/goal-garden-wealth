@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddExpenseDialogProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface AddExpenseDialogProps {
     date: string;
     category: string;
     subcategory?: string;
+    excludeFromNetWorth?: boolean;
   }) => Promise<void>;
   isAdding: boolean;
 }
@@ -64,6 +66,7 @@ const AddExpenseDialog = ({ isOpen, onOpenChange, onAddExpense, isAdding }: AddE
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
   const [date, setDate] = useState<Date>(new Date());
+  const [excludeFromNetWorth, setExcludeFromNetWorth] = useState(false);
 
   const isInvestmentCategory = category === 'Investment';
 
@@ -85,7 +88,8 @@ const AddExpenseDialog = ({ isOpen, onOpenChange, onAddExpense, isAdding }: AddE
       amount: amountNumber,
       date: format(date, 'yyyy-MM-dd'),
       category,
-      subcategory: isInvestmentCategory ? subcategory : undefined
+      subcategory: isInvestmentCategory ? subcategory : undefined,
+      excludeFromNetWorth: isInvestmentCategory ? excludeFromNetWorth : undefined
     });
 
     // Reset form
@@ -94,6 +98,7 @@ const AddExpenseDialog = ({ isOpen, onOpenChange, onAddExpense, isAdding }: AddE
     setCategory('');
     setSubcategory('');
     setDate(new Date());
+    setExcludeFromNetWorth(false);
     onOpenChange(false);
   };
 
@@ -102,6 +107,7 @@ const AddExpenseDialog = ({ isOpen, onOpenChange, onAddExpense, isAdding }: AddE
     // Reset subcategory when category changes
     if (newCategory !== 'Investment') {
       setSubcategory('');
+      setExcludeFromNetWorth(false);
     }
   };
 
@@ -163,21 +169,34 @@ const AddExpenseDialog = ({ isOpen, onOpenChange, onAddExpense, isAdding }: AddE
           </div>
 
           {isInvestmentCategory && (
-            <div className="space-y-2">
-              <Label htmlFor="subcategory">Investment Type</Label>
-              <Select value={subcategory} onValueChange={setSubcategory} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select investment type" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border shadow-md z-50 max-h-60">
-                  {investmentSubcategories.map((subcat) => (
-                    <SelectItem key={subcat} value={subcat}>
-                      {subcat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="subcategory">Investment Type</Label>
+                <Select value={subcategory} onValueChange={setSubcategory} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select investment type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-md z-50 max-h-60">
+                    {investmentSubcategories.map((subcat) => (
+                      <SelectItem key={subcat} value={subcat}>
+                        {subcat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="exclude-networth"
+                  checked={excludeFromNetWorth}
+                  onCheckedChange={(checked) => setExcludeFromNetWorth(checked as boolean)}
+                />
+                <Label htmlFor="exclude-networth" className="text-sm">
+                  Exclude from net worth calculation (for expenses like RD contributions)
+                </Label>
+              </div>
+            </>
           )}
 
           <div className="space-y-2">

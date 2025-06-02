@@ -120,10 +120,12 @@ export const useBudget = () => {
     is_tax_deductible?: boolean;
     tax_category?: string;
     business_purpose?: string;
+    excludeFromNetWorth?: boolean;
   }) => {
     const expense: Omit<Expense, 'id' | 'created_at' | 'updated_at'> = {
       ...expenseData,
       month_year: currentMonthYear,
+      exclude_from_networth: expenseData.excludeFromNetWorth,
     };
     
     return addExpenseMutation.mutateAsync(expense);

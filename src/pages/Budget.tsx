@@ -371,6 +371,8 @@ const Budget = () => {
     amount: number;
     date: string;
     category: string;
+    subcategory?: string;
+    excludeFromNetWorth?: boolean;
   }) => {
     await addExpense(expenseData);
   };

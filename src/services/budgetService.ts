@@ -15,6 +15,7 @@ export type Expense = {
   tax_category?: string | null;
   business_purpose?: string | null;
   subcategory?: string | null;
+  exclude_from_networth?: boolean;
 };
 
 export type BudgetPeriod = {
@@ -41,7 +42,7 @@ export const budgetService = {
     return data || [];
   },
 
-  // Get investment statistics for analytics
+  // Get investment statistics for analytics (only include investments that should count towards net worth)
   async getInvestmentStatistics(monthYear?: string): Promise<{
     totalInvestmentAmount: number;
     investmentsByType: Record<string, number>;
@@ -53,7 +54,7 @@ export const budgetService = {
 
     let query = supabase
       .from('expenses')
-      .select('amount, subcategory, month_year, date')
+      .select('amount, subcategory, month_year, date, exclude_from_networth')
       .eq('user_id', user.id)
       .eq('category', 'Investment')
       .order('date', { ascending: false });
@@ -65,7 +66,8 @@ export const budgetService = {
     const { data, error } = await query;
     if (error) throw error;
 
-    const expenses = data || [];
+    // Filter out expenses that should be excluded from net worth
+    const expenses = (data || []).filter(exp => !exp.exclude_from_networth);
     
     // Calculate statistics
     const totalInvestmentAmount = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
@@ -358,8 +360,8 @@ export const budgetService = {
 
     if (error) throw error;
 
-    // For investment expenses, create a category spending record
-    if (expense.category === 'Investment' && expense.subcategory) {
+    // For investment expenses that should count towards net worth, create a category spending record
+    if (expense.category === 'Investment' && expense.subcategory && !expense.exclude_from_networth) {
       try {
         await supabase
           .from('category_spending')
