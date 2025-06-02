@@ -1,19 +1,23 @@
 
 import React from "react"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from "@/components/ui/sidebar"
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   ChartPie,
   Home,
@@ -26,6 +30,8 @@ import {
   FileText,
   User,
   Briefcase,
+  ChevronDown,
+  LogOut,
 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -33,7 +39,6 @@ import { Button } from "@/components/ui/button"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Label } from "@/components/ui/label"
 import { ModeToggle } from "../ModeToggle"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 export function AppSidebar() {
   const { user } = useAuth()
@@ -106,108 +111,86 @@ export function AppSidebar() {
   ]
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="p-0">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="lucide lucide-menu"
-          >
-            <line x1="4" x2="20" y1="12" y2="12" />
-            <line x1="4" x2="20" y1="6" y2="6" />
-            <line x1="4" x2="20" y1="18" y2="18" />
-          </svg>
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-full sm:w-64 border-r">
-        <SheetHeader className="space-y-2.5">
-          <SheetTitle>Menu</SheetTitle>
-          <SheetDescription>
-            Navigate through the app.
-          </SheetDescription>
-        </SheetHeader>
-        <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10">
-          <div className="py-4">
-            <div className="px-4 py-2">
-              <Link to={"/profile"} className="gap-2 flex items-center">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://github.com/shadcn.png" alt="Avatar" />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="font-semibold">{user?.email}</span>
-                  <span className="text-sm text-muted-foreground">
-                    User Profile
-                  </span>
-                </div>
-              </Link>
+    <Sidebar>
+      <SidebarHeader>
+        <div className="px-4 py-2">
+          <Link to={"/profile"} className="gap-2 flex items-center">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src="https://github.com/shadcn.png" alt="Avatar" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <span className="font-semibold">{user?.email}</span>
+              <span className="text-sm text-muted-foreground">
+                User Profile
+              </span>
             </div>
-            <div className="space-y-1">
+          </Link>
+        </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
               {items.map((item) => (
-                <Button
-                  key={item.title}
-                  variant="ghost"
-                  className={`w-full justify-start ${location.pathname === item.url ? "bg-secondary" : ""
-                    }`}
-                  asChild
-                >
-                  <Link to={item.url} className="w-full">
-                    <item.icon className="mr-2 h-4 w-4" />
-                    <span>{item.title}</span>
-                  </Link>
-                </Button>
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.url || (item.url !== '/' && location.pathname.startsWith(item.url))}>
+                    <Link to={item.url}>
+                      <item.icon className="mr-2 h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               ))}
-            </div>
-            <Accordion type="single" collapsible className="w-full border-none">
-              <AccordionItem value="settings">
-                <AccordionTrigger>Settings</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-1">
-                    {settingsItems.map((item) => (
-                      <Button
-                        key={item.title}
-                        variant="ghost"
-                        className={`w-full justify-start ${location.pathname === item.url ? "bg-secondary" : ""
-                          }`}
-                        asChild
-                      >
-                        <Link to={item.url} className="w-full">
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <SidebarGroupLabel className="cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md p-2 flex items-center justify-between">
+                Settings
+                <ChevronDown className="h-4 w-4" />
+              </SidebarGroupLabel>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {settingsItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                        <Link to={item.url}>
                           <item.icon className="mr-2 h-4 w-4" />
                           <span>{item.title}</span>
                         </Link>
-                      </Button>
-                    ))}
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={handleLogout}
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
                       <span>Logout</span>
-                    </Button>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            <div className="border-t py-4">
-              <div className="space-y-2 px-4">
-                <div className="flex items-center justify-between rounded-md border p-4">
-                  <Label htmlFor="theme">Theme</Label>
-                  <ModeToggle />
-                </div>
-              </div>
-            </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarSeparator />
+        <div className="p-4">
+          <div className="flex items-center justify-between rounded-md border p-4">
+            <Label htmlFor="theme">Theme</Label>
+            <ModeToggle />
           </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
   )
 }
