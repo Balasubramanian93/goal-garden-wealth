@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, Wallet, ArrowRight } from "lucide-react";
@@ -104,15 +103,17 @@ const NetWorthWidget = () => {
             </div>
           )}
 
-          <div className="flex gap-2">
-            <Button asChild size="sm" className="flex-1">
-              <Link to="/portfolio">
-                View Portfolio <ArrowRight className="ml-1 h-3 w-3" />
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <Button asChild size="sm" className="flex-1 min-w-0">
+              <Link to="/portfolio" className="flex items-center justify-center gap-1 truncate">
+                <span className="truncate">View Portfolio</span>
+                <ArrowRight className="h-3 w-3 flex-shrink-0" />
               </Link>
             </Button>
-            <Button asChild size="sm" variant="outline" className="flex-1">
-              <Link to="/investments">
-                Manage <ArrowRight className="ml-1 h-3 w-3" />
+            <Button asChild size="sm" variant="outline" className="flex-1 min-w-0">
+              <Link to="/investments" className="flex items-center justify-center gap-1 truncate">
+                <span className="truncate">Manage</span>
+                <ArrowRight className="h-3 w-3 flex-shrink-0" />
               </Link>
             </Button>
           </div>
