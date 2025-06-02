@@ -112,21 +112,19 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader>
-        <div className="px-4 py-2">
-          <Link to={"/profile"} className="gap-2 flex items-center">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="https://github.com/shadcn.png" alt="Avatar" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="font-semibold">{user?.email}</span>
-              <span className="text-sm text-muted-foreground">
-                User Profile
-              </span>
-            </div>
-          </Link>
-        </div>
+      <SidebarHeader className="p-4">
+        <Link to={"/profile"} className="flex items-center gap-3 min-h-0">
+          <Avatar className="h-10 w-10 flex-shrink-0">
+            <AvatarImage src="https://github.com/shadcn.png" alt="Avatar" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className="font-semibold text-sm truncate">{user?.email}</span>
+            <span className="text-xs text-muted-foreground truncate">
+              User Profile
+            </span>
+          </div>
+        </Link>
       </SidebarHeader>
       
       <SidebarContent>
