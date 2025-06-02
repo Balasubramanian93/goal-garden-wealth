@@ -427,6 +427,48 @@ export type Database = {
         }
         Relationships: []
       }
+      investments: {
+        Row: {
+          created_at: string
+          current_value: number
+          id: string
+          investment_name: string
+          investment_type: string
+          notes: string | null
+          purchase_date: string | null
+          purchase_price: number | null
+          quantity: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number
+          id?: string
+          investment_name: string
+          investment_type: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          quantity?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number
+          id?: string
+          investment_name?: string
+          investment_type?: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          quantity?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       portfolio_assets: {
         Row: {
           created_at: string
@@ -708,6 +750,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_net_worth: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
       calculate_progress: {
         Args: { row_id: number; amount_to_add: number }
         Returns: number
@@ -718,6 +764,10 @@ export type Database = {
       }
       update_budget_period_totals: {
         Args: { period_id: string }
+        Returns: undefined
+      }
+      update_net_worth: {
+        Args: { user_uuid: string }
         Returns: undefined
       }
     }

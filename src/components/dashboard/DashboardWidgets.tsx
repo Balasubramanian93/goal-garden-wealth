@@ -1,4 +1,3 @@
-
 import { useBudget } from "@/hooks/useBudget";
 import { useGoalsStore } from "@/store/goalsStore";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +15,7 @@ import PersonalizedRecommendationsWidget from "./PersonalizedRecommendationsWidg
 import AchievementBadgesWidget from "./AchievementBadgesWidget";
 import RemindersWidget from "./RemindersWidget";
 import { useWidgetPreferences } from "@/hooks/useWidgetPreferences";
+import NetWorthWidget from "./NetWorthWidget";
 
 const DashboardWidgets = () => {
   const { user } = useAuth();
@@ -49,6 +49,9 @@ const DashboardWidgets = () => {
     <div className="space-y-6">
       {/* Top Row - Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Net Worth Widget - New primary widget */}
+        <NetWorthWidget />
+        
         {preferences.budgetOverview && (
           <BudgetOverviewWidget 
             currentBudgetPeriod={currentBudgetPeriod} 
