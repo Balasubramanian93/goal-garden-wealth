@@ -6,18 +6,12 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
 import {
   ChartPie,
   Home,
@@ -26,29 +20,26 @@ import {
   Wallet,
   TrendingUp,
   BookOpen,
-  Settings,
   FileText,
   User,
   Briefcase,
-  ChevronDown,
   LogOut,
 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Label } from "@/components/ui/label"
 import { ModeToggle } from "../ModeToggle"
 
 export function AppSidebar() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
   const handleLogout = async () => {
     try {
-      // Handle logout - you may need to implement this in your AuthContext
-      navigate("/login")
+      await signOut()
+      navigate("/")
     } catch (error) {
       console.error("Logout failed:", error)
     }
@@ -100,9 +91,6 @@ export function AppSidebar() {
       url: "/blogs",
       icon: BookOpen,
     },
-  ]
-
-  const settingsItems = [
     {
       title: "Profile",
       url: "/profile",
@@ -121,7 +109,7 @@ export function AppSidebar() {
           <div className="flex flex-col min-w-0 flex-1">
             <span className="font-semibold text-sm truncate">{user?.email}</span>
             <span className="text-xs text-muted-foreground truncate">
-              User Profile
+              Welcome back
             </span>
           </div>
         </Link>
@@ -129,7 +117,6 @@ export function AppSidebar() {
       
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -142,41 +129,14 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <Collapsible>
-            <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md p-2 flex items-center justify-between">
-                Settings
-                <ChevronDown className="h-4 w-4" />
-              </SidebarGroupLabel>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {settingsItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={location.pathname === item.url}>
-                        <Link to={item.url}>
-                          <item.icon className="mr-2 h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Logout</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </Collapsible>
         </SidebarGroup>
       </SidebarContent>
 
