@@ -1,3 +1,4 @@
+
 import { useBudget } from "@/hooks/useBudget";
 import { useGoalsStore } from "@/store/goalsStore";
 import { useQuery } from "@tanstack/react-query";
@@ -44,6 +45,11 @@ const DashboardWidgets = () => {
   }, [user, fetchGoals]);
 
   const { preferences } = useWidgetPreferences();
+
+  // Show loading state for initial data
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
