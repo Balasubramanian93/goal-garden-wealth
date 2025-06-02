@@ -36,14 +36,14 @@ const BudgetDetail = () => {
       const periods = await budgetService.getBudgetPeriods();
       console.log('All budget periods:', periods);
       
-      // Try to find by ID first, then by period
-      let period = periods.find(p => p.id === budgetId);
+      // Try to find by period first (most common case for history links)
+      let period = periods.find(p => p.period === budgetId);
       if (!period) {
-        // If not found by ID, try to find by period (month-year format)
-        period = periods.find(p => p.period === budgetId);
+        // If not found by period, try to find by ID
+        period = periods.find(p => p.id === budgetId);
       }
       if (!period) {
-        // Try to find by period_name
+        // Try to find by period_name as fallback
         period = periods.find(p => p.period_name === budgetId);
       }
       
@@ -53,16 +53,17 @@ const BudgetDetail = () => {
     enabled: !!user && !!budgetId,
   });
 
-  // Get expenses for this budget period
+  // Get expenses for this budget period - use budgetId directly if no period found
   const { data: expenses = [], isLoading: expensesLoading } = useQuery({
-    queryKey: ['expenses', budgetPeriod?.period],
+    queryKey: ['expenses', budgetPeriod?.period || budgetId],
     queryFn: async () => {
-      console.log('Fetching expenses for period:', budgetPeriod?.period);
-      const expenseData = await budgetService.getExpenses(budgetPeriod!.period);
+      const periodToUse = budgetPeriod?.period || budgetId;
+      console.log('Fetching expenses for period:', periodToUse);
+      const expenseData = await budgetService.getExpenses(periodToUse);
       console.log('Fetched expenses:', expenseData);
       return expenseData;
     },
-    enabled: !!budgetPeriod?.period,
+    enabled: !!user && (!!budgetPeriod?.period || !!budgetId),
   });
 
   const isLoading = budgetLoading || expensesLoading;
@@ -112,6 +113,11 @@ const BudgetDetail = () => {
               <p className="text-muted-foreground text-center text-sm mt-2">
                 This might be because the budget period hasn't been created yet or the URL parameter doesn't match.
               </p>
+              <div className="mt-4 p-4 bg-muted rounded-md">
+                <p className="text-sm font-medium">Debug Information:</p>
+                <p className="text-xs mt-1">Looking for budget with identifier: {budgetId}</p>
+                <p className="text-xs">Expected format: YYYY-MM (e.g., 2025-05) or UUID</p>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -130,7 +136,7 @@ const BudgetDetail = () => {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Summary</CardTitle>
-            <CardDescription>Overview for {budgetPeriod.period_name}.</CardDescription>
+            <CardDescription>Overview for {budgetPeriod.period_name} ({budgetPeriod.period}).</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
@@ -154,7 +160,7 @@ const BudgetDetail = () => {
         <Card className="mb-8">
            <CardHeader>
             <CardTitle>Spending Breakdown</CardTitle>
-            <CardDescription>Category-wise expense distribution.</CardDescription>
+            <CardDescription>Category-wise expense distribution for {budgetPeriod.period}.</CardDescription>
           </CardHeader>
           <CardContent>
             {spendingBreakdown.length > 0 ? (
@@ -206,7 +212,7 @@ const BudgetDetail = () => {
               <div className="text-center py-8 text-muted-foreground">
                 No expenses recorded for this period ({budgetPeriod.period}).
                 <br />
-                <span className="text-sm">Check if expenses exist for period: {budgetPeriod.period}</span>
+                <span className="text-sm">Period identifier used: {budgetPeriod.period}</span>
               </div>
             )}
           </CardContent>
