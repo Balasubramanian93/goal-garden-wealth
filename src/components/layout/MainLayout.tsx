@@ -1,5 +1,6 @@
 
 import { useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { 
   ChartPie
 } from "lucide-react";
@@ -42,13 +43,13 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         {/* Header with Logo and Navigation for non-authenticated users */}
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex h-16 items-center justify-between px-4 container">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
+            {/* Logo - Make it clickable to go to home */}
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <ChartPie className="h-5 w-5 text-primary-foreground" />
               </div>
               <h1 className="text-xl font-bold">FinanceBloom</h1>
-            </div>
+            </Link>
             
             {/* Navigation */}
             <ResponsiveNavigation />
