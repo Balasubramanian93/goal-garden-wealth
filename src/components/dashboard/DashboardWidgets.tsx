@@ -2,7 +2,7 @@
 import { useBudget } from "@/hooks/useBudget";
 import { useGoalsStore } from "@/store/goalsStore";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 import BudgetOverviewWidget from "./BudgetOverviewWidget";
