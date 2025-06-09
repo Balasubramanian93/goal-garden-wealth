@@ -6,6 +6,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
+import ResponsiveNavigation from "./ResponsiveNavigation";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -38,6 +39,22 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex flex-col bg-background font-poppins">
+        {/* Header with Logo and Navigation for non-authenticated users */}
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex h-16 items-center justify-between px-4 container">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                <ChartPie className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <h1 className="text-xl font-bold">FinanceBloom</h1>
+            </div>
+            
+            {/* Navigation */}
+            <ResponsiveNavigation />
+          </div>
+        </header>
+
         <main className="flex-1">
           {children}
         </main>
