@@ -3,7 +3,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { ArrowRight, ChartPie, Star, Wallet, Calendar } from "lucide-react";
+import { ArrowRight, ChartPie, Star, Wallet, Calendar, LogIn, UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardWidgets from "@/components/dashboard/DashboardWidgets";
 
@@ -33,10 +33,20 @@ const Index = () => {
               <div className="flex flex-col sm:flex-row gap-4 mt-4">
                 <Button size="lg" asChild>
                   <Link to="/register">
-                    Get Started <ArrowRight className="ml-2 h-4 w-4" />
+                    <UserPlus className="mr-2 h-5 w-5" />
+                    Get Started Free
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <Link to="/login">
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Sign In
                   </Link>
                 </Button>
               </div>
+              <p className="text-sm text-muted-foreground">
+                No credit card required • Free forever plan available
+              </p>
             </div>
           </section>
 
@@ -74,9 +84,20 @@ const Index = () => {
               <p className="max-w-[600px] mx-auto mb-8 text-muted-foreground">
                 Join thousands of users who have transformed their financial management with our platform.
               </p>
-              <Button size="lg" asChild>
-                <Link to="/register">Start Your Free Trial</Link>
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button size="lg" asChild>
+                  <Link to="/register">
+                    <UserPlus className="mr-2 h-5 w-5" />
+                    Start Your Free Trial
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <Link to="/login">
+                    <LogIn className="mr-2 h-5 w-5" />
+                    Already have an account?
+                  </Link>
+                </Button>
+              </div>
             </div>
           </section>
         </>
