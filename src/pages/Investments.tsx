@@ -15,7 +15,7 @@ import { investmentService, Investment } from "@/services/investmentService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
-type InvestmentType = 'Gold' | 'Equity' | 'Mutual Fund' | 'Emergency Fund' | 'Fixed Deposit' | 'Real Estate' | 'Other';
+type InvestmentType = 'Gold' | 'Equity' | 'Mutual Fund' | 'Emergency Fund' | 'Emergency Fund FD' | 'Fixed Deposit' | 'Real Estate' | 'Other';
 
 const Investments = () => {
   const { user } = useAuth();
@@ -165,6 +165,7 @@ const Investments = () => {
     'Equity': 'bg-blue-100 text-blue-800',
     'Mutual Fund': 'bg-green-100 text-green-800',
     'Emergency Fund': 'bg-red-100 text-red-800',
+    'Emergency Fund FD': 'bg-orange-100 text-orange-800',
     'Fixed Deposit': 'bg-purple-100 text-purple-800',
     'Real Estate': 'bg-orange-100 text-orange-800',
     'Other': 'bg-gray-100 text-gray-800'
@@ -211,7 +212,7 @@ const Investments = () => {
                     id="investment_name"
                     value={formData.investment_name}
                     onChange={(e) => setFormData(prev => ({ ...prev, investment_name: e.target.value }))}
-                    placeholder="e.g., SBI Gold ETF, Reliance Stock"
+                    placeholder="e.g., SBI Gold ETF, Emergency FD - Bank of India"
                     required
                   />
                 </div>
@@ -229,6 +230,7 @@ const Investments = () => {
                       <SelectItem value="Equity">Equity</SelectItem>
                       <SelectItem value="Mutual Fund">Mutual Fund</SelectItem>
                       <SelectItem value="Emergency Fund">Emergency Fund</SelectItem>
+                      <SelectItem value="Emergency Fund FD">Emergency Fund FD</SelectItem>
                       <SelectItem value="Fixed Deposit">Fixed Deposit</SelectItem>
                       <SelectItem value="Real Estate">Real Estate</SelectItem>
                       <SelectItem value="Other">Other</SelectItem>

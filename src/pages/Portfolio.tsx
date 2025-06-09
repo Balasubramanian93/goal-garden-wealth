@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +45,7 @@ const Portfolio = () => {
   const portfolioGainPercent = portfolioValue > 0 ? (portfolioGain / (portfolioValue - portfolioGain)) * 100 : 0;
   const isPositiveGain = portfolioGainPercent > 0;
 
-  // Calculate asset allocation data
+  // Calculate asset allocation data with Emergency Fund FDs treated appropriately
   const assetTypes = [...new Set(portfolioAssets.map(asset => asset.type))];
   
   const assetAllocation = assetTypes.map((type, index) => {
@@ -54,8 +53,8 @@ const Portfolio = () => {
     const value = assets.reduce((sum, asset) => sum + asset.value, 0);
     const percentage = portfolioValue > 0 ? (value / portfolioValue) * 100 : 0;
     
-    // Colors for the different asset types
-    const colors = ['#0ea5e9', '#8b5cf6', '#f97316', '#10b981', '#f43f5e', '#a855f7', '#06b6d4'];
+    // Colors for the different asset types - added color for Emergency Fund FD
+    const colors = ['#0ea5e9', '#8b5cf6', '#f97316', '#10b981', '#f43f5e', '#a855f7', '#06b6d4', '#f59e0b'];
     
     return {
       name: type,

@@ -5,7 +5,7 @@ export interface Investment {
   id: string;
   user_id: string;
   investment_name: string;
-  investment_type: 'Gold' | 'Equity' | 'Mutual Fund' | 'Emergency Fund' | 'Fixed Deposit' | 'Real Estate' | 'Other';
+  investment_type: 'Gold' | 'Equity' | 'Mutual Fund' | 'Emergency Fund' | 'Emergency Fund FD' | 'Fixed Deposit' | 'Real Estate' | 'Other';
   current_value: number;
   quantity?: number;
   purchase_price?: number;

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, Wallet, ArrowRight } from "lucide-react";
@@ -44,7 +43,7 @@ const NetWorthWidget = () => {
   const netWorthChangePercent = previousNetWorth > 0 ? (netWorthChange / previousNetWorth) * 100 : 0;
   const isPositiveChange = netWorthChange >= 0;
 
-  // Group investments by type
+  // Group investments by type with Emergency Fund FDs separate
   const investmentsByType = investments.reduce((acc, investment) => {
     if (!acc[investment.investment_type]) {
       acc[investment.investment_type] = 0;
@@ -52,6 +51,9 @@ const NetWorthWidget = () => {
     acc[investment.investment_type] += investment.current_value;
     return acc;
   }, {} as Record<string, number>);
+
+  // Calculate total emergency funds (Emergency Fund + Emergency Fund FD)
+  const totalEmergencyFunds = (investmentsByType['Emergency Fund'] || 0) + (investmentsByType['Emergency Fund FD'] || 0);
 
   if (netWorthLoading || historyLoading || investmentsLoading || budgetLoading) {
     return (
@@ -105,13 +107,28 @@ const NetWorthWidget = () => {
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Breakdown:</p>
             
-            {/* Investment breakdown */}
-            {Object.entries(investmentsByType).map(([type, value]) => (
-              <div key={type} className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">{type}</span>
-                <span className="font-medium">₹{value.toLocaleString()}</span>
+            {/* Investment breakdown with Emergency Fund FDs grouped */}
+            {Object.entries(investmentsByType).map(([type, value]) => {
+              // Skip Emergency Fund and Emergency Fund FD as we'll show them combined
+              if (type === 'Emergency Fund' || type === 'Emergency Fund FD') {
+                return null;
+              }
+              
+              return (
+                <div key={type} className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">{type}</span>
+                  <span className="font-medium">₹{value.toLocaleString()}</span>
+                </div>
+              );
+            })}
+            
+            {/* Show combined Emergency Funds if any exist */}
+            {totalEmergencyFunds > 0 && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Emergency Funds</span>
+                <span className="font-medium">₹{totalEmergencyFunds.toLocaleString()}</span>
               </div>
-            ))}
+            )}
             
             {/* Remaining budget */}
             {remainingBudget > 0 && (
